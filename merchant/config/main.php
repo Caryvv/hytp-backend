@@ -27,7 +27,7 @@ return [
             'charset' => 'UTF-8',
         ],
         'user' => [
-            'identityClass' => \common\models\User::class,
+            'identityClass' => \common\models\Shop::class,
             'enableAutoLogin' => false,
             'enableSession' => false,
             'loginUrl' => null,
@@ -48,6 +48,27 @@ return [
             'enablePrettyUrl' => true,
             'enableStrictParsing' => false,
             'showScriptName' => false,
+            'rules' => [
+                // 认证与入驻
+                'POST auth/login' => 'auth/login',
+                'POST auth/refresh' => 'auth/refresh',
+                'POST auth/logout' => 'auth/logout',
+                'POST register' => 'auth/register',
+                // 店铺信息与资质
+                'GET shop' => 'shop/info',
+                'PUT shop' => 'shop/update',
+                'PATCH shop' => 'shop/update',
+                'GET qualifications' => 'shop/qualifications',
+                'POST qualifications' => 'shop/add-qualification',
+                // 商品管理
+                'GET products' => 'product/index',
+                'POST products' => 'product/create',
+                'GET products/<id:\d+>' => 'product/view',
+                'PUT products/<id:\d+>' => 'product/update',
+                'PATCH products/<id:\d+>' => 'product/update',
+                'POST products/<id:\d+>/toggle' => 'product/toggle',
+                'PUT products/<id:\d+>/stock' => 'product/stock',
+            ],
         ],
     ],
     'params' => $params,

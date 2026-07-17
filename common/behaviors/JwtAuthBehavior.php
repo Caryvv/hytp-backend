@@ -31,6 +31,12 @@ class JwtAuthBehavior extends ActionFilter
     /** 受众，三端不同（app/merchant/admin）。 */
     public $aud = JwtService::AUD_APP;
 
+    /**
+     * 身份模型类，需实现 IdentityInterface 且有静态 findIdentity(int)。
+     * 默认用户端 User；merchant 端传 Shop::class，admin 端传 AdminUser::class。
+     */
+    public $identityClass = User::class;
+
     // 注意：$only / $except 由父类 yii\base\ActionFilter 声明（无类型），
     // 子类不能再加类型声明，否则 PHP 报 "must not be defined"。直接复用父类的 $except。
 
@@ -58,7 +64,9 @@ class JwtAuthBehavior extends ActionFilter
         $jwt = new JwtService($this->aud);
         $userId = $jwt->verifyAccess($token); // 失败抛 1002
 
-        $user = User::findIdentity($userId);
+        /** @var class-string<\yii\web\IdentityInterface> $cls */
+        $cls = $this->identityClass;
+        $user = $cls::findIdentity($userId);
         if ($user === null) {
             // 用户不存在 / 已封禁
             if ($isOptional) {

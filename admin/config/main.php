@@ -28,7 +28,7 @@ return [
             'charset' => 'UTF-8',
         ],
         'user' => [
-            'identityClass' => \common\models\User::class,
+            'identityClass' => \common\models\AdminUser::class,
             'enableAutoLogin' => false,
             'enableSession' => false,
             'loginUrl' => null,
@@ -49,6 +49,22 @@ return [
             'enablePrettyUrl' => true,
             'enableStrictParsing' => false,
             'showScriptName' => false,
+            'rules' => [
+                // 认证
+                'POST auth/login' => 'auth/login',
+                'POST auth/refresh' => 'auth/refresh',
+                'POST auth/logout' => 'auth/logout',
+                // 概览
+                'GET dashboard' => 'dashboard/index',
+                // 商家审核
+                'GET shops' => 'shop/index',
+                'POST shops/<id:\d+>/audit' => 'shop/audit',
+                // 商品审核
+                'GET products' => 'product/index',
+                'POST products/<id:\d+>/audit' => 'product/audit',
+                // 操作日志
+                'GET logs' => 'log/index',
+            ],
         ],
     ],
     'params' => $params,

@@ -32,6 +32,10 @@ class ErrorCode
     public const STOCK_NOT_ENOUGH = 1201;
     public const PRODUCT_OFF_SHELF = 1202;
     public const ORDER_STATUS_INVALID = 1203;
+    public const PRODUCT_NOT_FOUND = 1204;         // 商品不存在
+    public const PRODUCT_STATUS_INVALID = 1205;    // 商品状态不允许该操作
+    public const CATEGORY_NOT_FOUND = 1206;        // 分类不存在
+    public const PRODUCT_PARAM_INVALID = 1207;     // 商品参数校验失败
 
     // 支付 1300-1399
     public const PAY_FAIL = 1301;
@@ -41,6 +45,10 @@ class ErrorCode
     // 文化/内容 1600-1699
     // 商家端 1700-1799
     public const SHOP_NOT_AUDITED = 1701;
+    public const SHOP_NOT_FOUND = 1702;            // 商家不存在
+    public const SHOP_STATUS_INVALID = 1703;       // 商家状态不允许该操作
+    public const SHOP_ACCOUNT_EXISTS = 1704;       // 商家账号已存在
+    public const ADMIN_NO_PERMISSION = 1705;       // 后台无该权限点
 
     // AI 1800-1899
     public const AI_UNAVAILABLE = 1801;
@@ -63,8 +71,16 @@ class ErrorCode
         self::STOCK_NOT_ENOUGH => '库存不足',
         self::PRODUCT_OFF_SHELF => '商品已下架',
         self::ORDER_STATUS_INVALID => '订单状态不允许该操作',
+        self::PRODUCT_NOT_FOUND => '商品不存在',
+        self::PRODUCT_STATUS_INVALID => '商品状态不允许该操作',
+        self::CATEGORY_NOT_FOUND => '分类不存在',
+        self::PRODUCT_PARAM_INVALID => '商品参数校验失败',
         self::PAY_FAIL => '支付失败',
         self::SHOP_NOT_AUDITED => '商家未通过审核',
+        self::SHOP_NOT_FOUND => '商家不存在',
+        self::SHOP_STATUS_INVALID => '商家状态不允许该操作',
+        self::SHOP_ACCOUNT_EXISTS => '商家账号已存在',
+        self::ADMIN_NO_PERMISSION => '无该操作权限',
         self::AI_UNAVAILABLE => 'AI 服务暂不可用',
         self::INTERNAL_ERROR => '服务器内部错误',
     ];
