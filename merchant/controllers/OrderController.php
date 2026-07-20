@@ -56,6 +56,12 @@ class OrderController extends ApiController
         ]);
     }
 
+    /** POST /orders/{orderNo}/confirm-return —— 租赁确认归还（待归还→已归还→退押金→已完成） */
+    public function actionConfirmReturn(string $orderNo): array
+    {
+        return (new MerchantOrderService())->confirmReturn($this->currentShop()->getId(), $orderNo);
+    }
+
     /** GET /refunds —— 本店售后列表 ?status=&page= */
     public function actionRefunds(): array
     {

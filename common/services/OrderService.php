@@ -336,6 +336,115 @@ class OrderService
     }
 
     /**
+     * 租赁下单：租金(日租金×天数) + 押金合并支付。单商品单店铺。
+     * 复用 buildLine 校验商品在售 + SKU 归属；事务扣库存。
+     *
+     * @param array<string,mixed> $in productId, skuId?, addressId, rentStart, rentEnd, depositAmount, remark?
+     * @return array{orderNo:string, totalAmount:string, depositAmount:string, payAmount:string}
+     */
+    public function createRent(int $userId, array $in): array
+    {
+        $addressId = (int) ($in['addressId'] ?? 0);
+        $address = Address::findOne(['id' => $addressId, 'user_id' => $userId]);
+        if ($address === null) {
+            throw new BizException(ErrorCode::ADDRESS_REQUIRED);
+        }
+
+        $rentStart = (int) ($in['rentStart'] ?? 0);
+        $rentEnd = (int) ($in['rentEnd'] ?? 0);
+        if ($rentStart <= 0 || $rentEnd <= 0 || $rentEnd <= $rentStart) {
+            throw new BizException(ErrorCode::RENT_PARAM_INVALID, '租期不合法');
+        }
+        $days = (int) ceil(($rentEnd - $rentStart) / 86400);
+        if ($days < 1) {
+            throw new BizException(ErrorCode::RENT_PARAM_INVALID, '租期至少 1 天');
+        }
+
+        $productId = (int) ($in['productId'] ?? 0);
+        $skuId = isset($in['skuId']) && $in['skuId'] !== '' ? (int) $in['skuId'] : null;
+        $line = $this->buildLine($productId, $skuId, 1, null);
+        if ($line === null) {
+            throw new BizException(ErrorCode::CART_ITEM_INVALID, '商品不可租赁');
+        }
+
+        $product = Product::findOne(['id' => $productId]);
+        if ($product === null || (int) $product->trade_type !== Product::TRADE_RENT) {
+            throw new BizException(ErrorCode::RENT_PARAM_INVALID, '该商品非租赁商品');
+        }
+
+        // 日租金 = 商品 price；租金 = 日租金 × 天数
+        $rentTotal = bcmul($line['price'], (string) $days, 2);
+        $deposit = isset($in['depositAmount']) && is_numeric($in['depositAmount'])
+            ? bcadd((string) $in['depositAmount'], '0', 2)
+            : '0.00';
+        $payAmount = bcadd($rentTotal, $deposit, 2);
+        $rate = $this->commissionRate();
+
+        $tx = Yii::$app->db->beginTransaction();
+        try {
+            $this->deductStock($productId, $skuId, 1);
+
+            $order = new ShopOrder();
+            $order->order_no = $this->genOrderNo();
+            $order->user_id = $userId;
+            $order->shop_id = $line['shopId'];
+            $order->type = ShopOrder::TYPE_RENT;
+            $order->total_amount = $rentTotal;
+            $order->deposit_amount = $deposit;
+            $order->pay_amount = $payAmount;
+            $order->commission = bcmul($rentTotal, $rate, 2);
+            $order->status = ShopOrder::STATUS_UNPAID;
+            $order->rent_start = $rentStart;
+            $order->rent_end = $rentEnd;
+            $order->address_id = $address->getId();
+            $order->address_snapshot = $address->toArray();
+            $order->remark = (string) ($in['remark'] ?? '');
+            if (!$order->save()) {
+                throw new BizException(ErrorCode::PARAM_INVALID, $this->firstError($order) ?? '租赁下单失败');
+            }
+
+            $item = new OrderItem();
+            $item->order_id = $order->getId();
+            $item->product_id = $productId;
+            $item->sku_id = $skuId;
+            $item->title_snapshot = $line['title'];
+            $item->spec_snapshot = $line['spec'];
+            $item->price = $line['price'];
+            $item->qty = 1;
+            $item->image_snapshot = $line['cover'];
+            if (!$item->save()) {
+                throw new BizException(ErrorCode::PARAM_INVALID, '订单明细保存失败');
+            }
+
+            $tx->commit();
+        } catch (\Throwable $e) {
+            $tx->rollBack();
+            throw $e;
+        }
+
+        return [
+            'orderNo' => $order->order_no,
+            'totalAmount' => $rentTotal,
+            'depositAmount' => $deposit,
+            'payAmount' => $payAmount,
+        ];
+    }
+
+    /**
+     * 租赁：用户寄回（使用中 → 待归还）。
+     */
+    public function markReturn(int $userId, string $orderNo): array
+    {
+        $order = $this->requireOwnOrder($userId, $orderNo);
+        if (!$order->isReturnable()) {
+            throw new BizException(ErrorCode::ORDER_STATUS_INVALID);
+        }
+        $order->status = ShopOrder::STATUS_TO_RETURN;
+        $order->save(false);
+        return $order->toDetailArray();
+    }
+
+    /**
      * 取当前用户的订单，不存在或越权抛错。
      */
     public function requireOwnOrder(int $userId, string $orderNo): ShopOrder

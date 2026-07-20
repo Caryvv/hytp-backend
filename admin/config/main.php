@@ -67,6 +67,9 @@ return [
                 'GET orders/<orderNo:\d+>' => 'order/view',
                 'GET refunds' => 'order/refunds',
                 'POST refunds/<id:\d+>/arbitrate' => 'order/arbitrate',
+                // 品质保障金理赔（阶段3+ P1）
+                'GET deposit-claims' => 'deposit-claim/index',
+                'POST deposit-claims/<id:\d+>/arbitrate' => 'deposit-claim/arbitrate',
                 // 操作日志
                 'GET logs' => 'log/index',
             ],

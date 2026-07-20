@@ -79,10 +79,13 @@ return [
                 'POST orders' => 'order/create',
                 'GET orders' => 'order/index',
                 'GET orders/<orderNo:\d+>' => 'order/view',
+                'POST orders/rent' => 'order/rent',
                 'POST orders/<orderNo:\d+>/cancel' => 'order/cancel',
                 'POST orders/<orderNo:\d+>/confirm' => 'order/confirm',
+                'POST orders/<orderNo:\d+>/return' => 'order/return',
                 'POST orders/<orderNo:\d+>/refund' => 'order/refund',
                 'POST orders/<orderNo:\d+>/review' => 'order/review',
+                'POST orders/<orderNo:\d+>/deposit-claim' => 'order/deposit-claim',
                 // 支付（Mock）
                 'POST pay' => 'payment/pay',
                 'POST pay/mock/confirm' => 'payment/mock-confirm',

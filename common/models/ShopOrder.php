@@ -23,6 +23,8 @@ use yii\db\ActiveRecord;
  * @property string $total_amount
  * @property string $pay_amount
  * @property string $commission
+ * @property string $deposit_amount
+ * @property int $deposit_refunded
  * @property int $status
  * @property int|null $rent_start
  * @property int|null $rent_end
@@ -34,6 +36,7 @@ use yii\db\ActiveRecord;
  * @property int|null $paid_at
  * @property int|null $shipped_at
  * @property int|null $finished_at
+ * @property int|null $returned_at
  * @property int $created_at
  * @property int $updated_at
  */
@@ -43,9 +46,13 @@ class ShopOrder extends ActiveRecord
     public const STATUS_UNPAID = 0;    // 待付款
     public const STATUS_UNSHIP = 1;    // 待发货（已支付）
     public const STATUS_SHIPPED = 2;   // 待收货（已发货）
-    public const STATUS_FINISHED = 4;  // 已完成（确认收货）
+    public const STATUS_FINISHED = 4;  // 已完成（确认收货/租赁退押完成）
     public const STATUS_CANCELLED = 5; // 已取消
     public const STATUS_REFUND = 6;    // 退款/售后
+    // 租赁专用状态
+    public const STATUS_IN_USE = 7;    // 使用中（租赁：商家发货后）
+    public const STATUS_TO_RETURN = 8; // 待归还（用户确认收货/寄回）
+    public const STATUS_RETURNED = 9;  // 已归还（商家确认收到，待退押金）
 
     // 订单类型
     public const TYPE_BUY = 1;     // 购买
@@ -70,12 +77,15 @@ class ShopOrder extends ActiveRecord
     {
         return [
             [['order_no', 'user_id', 'shop_id'], 'required'],
-            [['user_id', 'shop_id', 'address_id', 'rent_start', 'rent_end', 'paid_at', 'shipped_at', 'finished_at'], 'integer'],
+            [['user_id', 'shop_id', 'address_id', 'rent_start', 'rent_end', 'paid_at', 'shipped_at', 'finished_at', 'returned_at'], 'integer'],
             [['order_no'], 'string', 'max' => 32],
             [['remark'], 'string', 'max' => 255],
             [['express_company', 'express_no'], 'string', 'max' => 50],
             [['express_company', 'express_no'], 'default', 'value' => ''],
-            [['total_amount', 'pay_amount', 'commission'], 'number', 'min' => 0],
+            [['total_amount', 'pay_amount', 'commission', 'deposit_amount'], 'number', 'min' => 0],
+            [['deposit_amount'], 'default', 'value' => 0],
+            [['deposit_refunded'], 'in', 'range' => [0, 1]],
+            [['deposit_refunded'], 'default', 'value' => 0],
             [['address_snapshot'], 'safe'],
             [['type'], 'default', 'value' => self::TYPE_BUY],
             [['status'], 'default', 'value' => self::STATUS_UNPAID],
@@ -112,6 +122,24 @@ class ShopOrder extends ActiveRecord
         return (int) $this->status === self::STATUS_UNSHIP;
     }
 
+    /** 是否租赁单。 */
+    public function isRent(): bool
+    {
+        return (int) $this->type === self::TYPE_RENT;
+    }
+
+    /** 租赁：是否可标记归还（使用中，用户寄回）。 */
+    public function isReturnable(): bool
+    {
+        return $this->isRent() && (int) $this->status === self::STATUS_IN_USE;
+    }
+
+    /** 租赁：商家是否可确认归还（待归还）。 */
+    public function isReturnConfirmable(): bool
+    {
+        return $this->isRent() && (int) $this->status === self::STATUS_TO_RETURN;
+    }
+
     // ---------------- 输出 ----------------
 
     public function toListArray(): array
@@ -123,8 +151,11 @@ class ShopOrder extends ActiveRecord
             'type' => (int) $this->type,
             'totalAmount' => $this->total_amount,
             'payAmount' => $this->pay_amount,
+            'depositAmount' => $this->deposit_amount,
             'status' => (int) $this->status,
             'remark' => $this->remark,
+            'rentStart' => $this->rent_start !== null ? (int) $this->rent_start : null,
+            'rentEnd' => $this->rent_end !== null ? (int) $this->rent_end : null,
             'paidAt' => $this->paid_at !== null ? (int) $this->paid_at : null,
             'shippedAt' => $this->shipped_at !== null ? (int) $this->shipped_at : null,
             'finishedAt' => $this->finished_at !== null ? (int) $this->finished_at : null,
@@ -141,6 +172,8 @@ class ShopOrder extends ActiveRecord
             'address' => $this->address_snapshot,
             'expressCompany' => $this->express_company,
             'expressNo' => $this->express_no,
+            'depositRefunded' => (int) $this->deposit_refunded,
+            'returnedAt' => $this->returned_at !== null ? (int) $this->returned_at : null,
             'updatedAt' => (int) $this->updated_at,
         ]);
     }

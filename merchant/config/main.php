@@ -72,6 +72,7 @@ return [
                 'GET orders' => 'order/index',
                 'GET orders/<orderNo:\d+>' => 'order/view',
                 'POST orders/<orderNo:\d+>/ship' => 'order/ship',
+                'POST orders/<orderNo:\d+>/confirm-return' => 'order/confirm-return',
                 'GET refunds' => 'order/refunds',
                 'POST refunds/<id:\d+>/handle' => 'order/handle-refund',
             ],

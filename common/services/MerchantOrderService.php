@@ -9,6 +9,8 @@ use common\exceptions\BizException;
 use common\models\OrderItem;
 use common\models\OrderRefund;
 use common\models\Payment;
+use common\models\Product;
+use common\models\ProductSku;
 use common\models\ShopOrder;
 use Yii;
 
@@ -80,11 +82,48 @@ class MerchantOrderService
         if (!$order->isShippable()) {
             throw new BizException(ErrorCode::ORDER_STATUS_INVALID);
         }
-        $order->status = ShopOrder::STATUS_SHIPPED;
+        // 租赁单发货后进"使用中"，购买单进"待收货"
+        $order->status = $order->isRent() ? ShopOrder::STATUS_IN_USE : ShopOrder::STATUS_SHIPPED;
         $order->shipped_at = time();
         $order->express_company = (string) ($in['expressCompany'] ?? '');
         $order->express_no = (string) ($in['expressNo'] ?? '');
         $order->save(false);
+        return $order->toDetailArray();
+    }
+
+    /**
+     * 租赁：商家确认收到归还（待归还 → 已归还 → 退押金 Mock → 已完成）。
+     */
+    public function confirmReturn(int $shopId, string $orderNo): array
+    {
+        $order = $this->ownedOrder($shopId, $orderNo);
+        if (!$order->isReturnConfirmable()) {
+            throw new BizException(ErrorCode::ORDER_STATUS_INVALID);
+        }
+
+        $tx = Yii::$app->db->beginTransaction();
+        try {
+            $now = time();
+            $order->status = ShopOrder::STATUS_FINISHED;
+            $order->returned_at = $now;
+            $order->finished_at = $now;
+            // 退押金（Mock）：标记已退 + 累加商品销量
+            if (bccomp($order->deposit_amount, '0', 2) > 0) {
+                $order->deposit_refunded = 1;
+            }
+            $order->save(false);
+            foreach (OrderItem::find()->where(['order_id' => $order->getId()])->all() as $item) {
+                /** @var OrderItem $item */
+                Product::updateAllCounters(['sales' => (int) $item->qty], ['id' => $item->product_id]);
+                // 归还后库存回补（租赁品可再租）
+                $this->restoreStock((int) $item->product_id, $item->sku_id !== null ? (int) $item->sku_id : null, (int) $item->qty);
+            }
+            $tx->commit();
+        } catch (\Throwable $e) {
+            $tx->rollBack();
+            throw $e;
+        }
+
         return $order->toDetailArray();
     }
 
@@ -209,4 +248,17 @@ class MerchantOrderService
         $items = OrderItem::find()->where(['order_id' => $orderId])->all();
         return array_map(static fn (OrderItem $i): array => $i->toArray(), $items);
     }
+
+    /**
+     * 回补库存（租赁归还后商品可再租）。
+     */
+    private function restoreStock(int $productId, ?int $skuId, int $qty): void
+    {
+        if ($skuId !== null) {
+            ProductSku::updateAllCounters(['stock' => $qty], ['id' => $skuId]);
+        } else {
+            Product::updateAllCounters(['stock' => $qty], ['id' => $productId]);
+        }
+    }
 }
+

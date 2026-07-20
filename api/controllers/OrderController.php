@@ -9,6 +9,7 @@ use common\behaviors\JwtAuthBehavior;
 use common\enums\ErrorCode;
 use common\exceptions\BizException;
 use common\models\User;
+use common\services\DepositClaimService;
 use common\services\JwtService;
 use common\services\OrderService;
 use common\services\ReviewService;
@@ -104,6 +105,38 @@ class OrderController extends ApiController
             'rating' => $req->post('rating'),
             'content' => $req->post('content'),
             'images' => $req->post('images'),
+        ]);
+    }
+
+    /** POST /orders/rent —— 租赁下单 { productId, skuId?, addressId, rentStart, rentEnd, depositAmount, remark? } */
+    public function actionRent(): array
+    {
+        $req = Yii::$app->request;
+        return (new OrderService())->createRent($this->currentUser()->getId(), [
+            'productId' => $req->post('productId'),
+            'skuId' => $req->post('skuId'),
+            'addressId' => $req->post('addressId'),
+            'rentStart' => $req->post('rentStart'),
+            'rentEnd' => $req->post('rentEnd'),
+            'depositAmount' => $req->post('depositAmount'),
+            'remark' => $req->post('remark'),
+        ]);
+    }
+
+    /** POST /orders/{orderNo}/return —— 租赁寄回（使用中→待归还） */
+    public function actionReturn(string $orderNo): array
+    {
+        return (new OrderService())->markReturn($this->currentUser()->getId(), $orderNo);
+    }
+
+    /** POST /orders/{orderNo}/deposit-claim —— 发起品质保障金索赔 { reason, amount?, evidence? } */
+    public function actionDepositClaim(string $orderNo): array
+    {
+        $req = Yii::$app->request;
+        return (new DepositClaimService())->apply($this->currentUser()->getId(), $orderNo, [
+            'reason' => $req->post('reason'),
+            'amount' => $req->post('amount'),
+            'evidence' => $req->post('evidence'),
         ]);
     }
 
