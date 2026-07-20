@@ -30,19 +30,13 @@ class FollowService
 
         $exists = Follow::findOne(['user_id' => $userId, 'follow_user_id' => $targetId]);
         if ($exists === null) {
-            $tx = Yii::$app->db->beginTransaction();
-            try {
-                $f = new Follow();
-                $f->user_id = $userId;
-                $f->follow_user_id = $targetId;
-                $f->save(false);
-                User::updateAllCounters(['following_count' => 1], ['id' => $userId]);
-                User::updateAllCounters(['follower_count' => 1], ['id' => $targetId]);
-                $tx->commit();
-            } catch (\Throwable $e) {
-                $tx->rollBack();
-                throw $e;
-            }
+            // 关系写社交库（唯一键防重）；双向计数在账号库，提交后最终一致更新
+            $f = new Follow();
+            $f->user_id = $userId;
+            $f->follow_user_id = $targetId;
+            $f->save(false);
+            User::updateAllCounters(['following_count' => 1], ['id' => $userId]);
+            User::updateAllCounters(['follower_count' => 1], ['id' => $targetId]);
             $target->refresh();
         }
         return ['followed' => true, 'followerCount' => (int) $target->follower_count];

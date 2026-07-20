@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace common\models;
 
 use yii\behaviors\TimestampBehavior;
-use yii\db\ActiveRecord;
+use common\base\TradeActiveRecord;
 
 /**
  * OrderRefund model —— 售后/退款（对齐 docs/dev/02-数据库设计 §3.7）。
@@ -21,7 +21,7 @@ use yii\db\ActiveRecord;
  * @property int $created_at
  * @property int $updated_at
  */
-class OrderRefund extends ActiveRecord
+class OrderRefund extends TradeActiveRecord
 {
     // 售后状态
     public const STATUS_APPLYING = 0; // 申请中

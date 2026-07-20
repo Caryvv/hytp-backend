@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace common\models;
 
 use yii\behaviors\TimestampBehavior;
-use yii\db\ActiveRecord;
+use common\base\TradeActiveRecord;
 
 /**
  * ProductCategory model —— 商品分类（树形，对齐 docs/dev/02-数据库设计 §3.2）。
@@ -19,7 +19,7 @@ use yii\db\ActiveRecord;
  * @property int $created_at
  * @property int $updated_at
  */
-class ProductCategory extends ActiveRecord
+class ProductCategory extends TradeActiveRecord
 {
     public static function tableName(): string
     {

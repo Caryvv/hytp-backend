@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace common\models;
 
 use yii\behaviors\TimestampBehavior;
-use yii\db\ActiveRecord;
+use common\base\SocialActiveRecord;
 
 /**
  * Feed model —— 同袍动态（对齐 docs/dev/02-数据库设计 §4.1）。
@@ -27,7 +27,7 @@ use yii\db\ActiveRecord;
  * @property int $created_at
  * @property int $updated_at
  */
-class Feed extends ActiveRecord
+class Feed extends SocialActiveRecord
 {
     public const STATUS_AUDITING = 0; // 待审
     public const STATUS_NORMAL = 1;   // 正常

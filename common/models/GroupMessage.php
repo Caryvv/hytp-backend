@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace common\models;
 
 use yii\behaviors\TimestampBehavior;
-use yii\db\ActiveRecord;
+use common\base\SocialActiveRecord;
 
 /**
  * GroupMessage model —— 群聊消息（独立于私信 chat_message）。仅 created_at。
@@ -18,7 +18,7 @@ use yii\db\ActiveRecord;
  * @property int $msg_type 1文本 2图片
  * @property int $created_at
  */
-class GroupMessage extends ActiveRecord
+class GroupMessage extends SocialActiveRecord
 {
     public const TYPE_TEXT = 1;
     public const TYPE_IMAGE = 2;

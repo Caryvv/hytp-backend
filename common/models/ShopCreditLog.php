@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace common\models;
 
 use yii\behaviors\TimestampBehavior;
-use yii\db\ActiveRecord;
+use common\base\ShopActiveRecord;
 
 /**
  * ShopCreditLog model —— 商家信用分变更流水（对齐 docs/dev/02-数据库设计 §2.3）。
@@ -19,7 +19,7 @@ use yii\db\ActiveRecord;
  * @property int|null $ref_id
  * @property int $created_at
  */
-class ShopCreditLog extends ActiveRecord
+class ShopCreditLog extends ShopActiveRecord
 {
     public static function tableName(): string
     {

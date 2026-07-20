@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace common\models;
 
 use yii\behaviors\TimestampBehavior;
-use yii\db\ActiveRecord;
+use common\base\TradeActiveRecord;
 
 /**
  * OrderItem model —— 订单明细（下单快照，对齐 docs/dev/02-数据库设计 §3.6）。
@@ -22,7 +22,7 @@ use yii\db\ActiveRecord;
  * @property string $image_snapshot
  * @property int $created_at
  */
-class OrderItem extends ActiveRecord
+class OrderItem extends TradeActiveRecord
 {
     public static function tableName(): string
     {

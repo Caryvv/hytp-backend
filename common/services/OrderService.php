@@ -108,7 +108,7 @@ class OrderService
         $remark = (string) ($in['remark'] ?? '');
         $rate = $this->commissionRate();
 
-        $tx = Yii::$app->db->beginTransaction();
+        $tx = ShopOrder::getDb()->beginTransaction();
         try {
             $orderNos = [];
             $grandTotal = '0.00';
@@ -240,7 +240,7 @@ class OrderService
             throw new BizException(ErrorCode::ORDER_STATUS_INVALID);
         }
 
-        $tx = Yii::$app->db->beginTransaction();
+        $tx = ShopOrder::getDb()->beginTransaction();
         try {
             // 回补库存
             foreach (OrderItem::find()->where(['order_id' => $order->getId()])->all() as $item) {
@@ -268,7 +268,7 @@ class OrderService
             throw new BizException(ErrorCode::ORDER_STATUS_INVALID);
         }
 
-        $tx = Yii::$app->db->beginTransaction();
+        $tx = ShopOrder::getDb()->beginTransaction();
         try {
             foreach (OrderItem::find()->where(['order_id' => $order->getId()])->all() as $item) {
                 /** @var OrderItem $item */
@@ -319,7 +319,7 @@ class OrderService
         $refund->evidence = isset($in['evidence']) && is_array($in['evidence']) ? $in['evidence'] : [];
         $refund->status = \common\models\OrderRefund::STATUS_APPLYING;
 
-        $tx = Yii::$app->db->beginTransaction();
+        $tx = ShopOrder::getDb()->beginTransaction();
         try {
             if (!$refund->save()) {
                 throw new BizException(ErrorCode::PARAM_INVALID, '售后申请失败');
@@ -380,7 +380,7 @@ class OrderService
         $payAmount = bcadd($rentTotal, $deposit, 2);
         $rate = $this->commissionRate();
 
-        $tx = Yii::$app->db->beginTransaction();
+        $tx = ShopOrder::getDb()->beginTransaction();
         try {
             $this->deductStock($productId, $skuId, 1);
 

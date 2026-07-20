@@ -85,7 +85,7 @@ class PaymentService
             return ['orderNo' => $order->order_no, 'status' => (int) $order->status, 'paid' => true];
         }
 
-        $tx = Yii::$app->db->beginTransaction();
+        $tx = ShopOrder::getDb()->beginTransaction();
         try {
             $now = time();
             $payment->status = Payment::STATUS_PAID;

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace common\models;
 
 use yii\behaviors\TimestampBehavior;
-use yii\db\ActiveRecord;
+use common\base\AdminActiveRecord;
 
 /**
  * AdminOperationLog model —— 后台操作日志（对齐 docs/dev/02-数据库设计 §9.6）。
@@ -19,7 +19,7 @@ use yii\db\ActiveRecord;
  * @property string $ip
  * @property int $created_at
  */
-class AdminOperationLog extends ActiveRecord
+class AdminOperationLog extends AdminActiveRecord
 {
     public static function tableName(): string
     {

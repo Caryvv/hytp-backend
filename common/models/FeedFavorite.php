@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace common\models;
 
 use yii\behaviors\TimestampBehavior;
-use yii\db\ActiveRecord;
+use common\base\SocialActiveRecord;
 
 /**
  * FeedFavorite model —— 动态收藏关系（对齐 docs/dev/02-数据库设计 §4.2）。
@@ -16,7 +16,7 @@ use yii\db\ActiveRecord;
  * @property int $user_id
  * @property int $created_at
  */
-class FeedFavorite extends ActiveRecord
+class FeedFavorite extends SocialActiveRecord
 {
     public static function tableName(): string
     {

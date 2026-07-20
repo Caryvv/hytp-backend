@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace common\models;
 
-use yii\db\ActiveRecord;
+use common\base\AdminActiveRecord;
 
 /**
  * AdminRolePermission model —— 角色-权限点（RBAC，对齐 docs/dev/02-数据库设计 §9.6）。
@@ -14,7 +14,7 @@ use yii\db\ActiveRecord;
  * @property int $role_id
  * @property string $permission_key 权限点如 shop:audit / product:audit / config:edit
  */
-class AdminRolePermission extends ActiveRecord
+class AdminRolePermission extends AdminActiveRecord
 {
     // 常用权限点
     public const PERM_SHOP_AUDIT = 'shop:audit';

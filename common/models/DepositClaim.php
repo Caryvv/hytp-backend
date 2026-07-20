@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace common\models;
 
 use yii\behaviors\TimestampBehavior;
-use yii\db\ActiveRecord;
+use common\base\TradeActiveRecord;
 
 /**
  * DepositClaim model —— 品质保障金赔付记录（对齐 docs/dev/02-数据库设计 §3.11）。
@@ -25,7 +25,7 @@ use yii\db\ActiveRecord;
  * @property int $created_at
  * @property int $updated_at
  */
-class DepositClaim extends ActiveRecord
+class DepositClaim extends TradeActiveRecord
 {
     public const STATUS_PENDING = 0;  // 待判定
     public const STATUS_APPROVED = 1; // 成立赔付

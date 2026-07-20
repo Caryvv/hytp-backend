@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace common\models;
 
 use yii\behaviors\TimestampBehavior;
-use yii\db\ActiveRecord;
+use common\base\TradeActiveRecord;
 
 /**
  * ProductSku model —— 商品规格（尺码/颜色，对齐 docs/dev/02-数据库设计 §3.4）。
@@ -19,7 +19,7 @@ use yii\db\ActiveRecord;
  * @property int $created_at
  * @property int $updated_at
  */
-class ProductSku extends ActiveRecord
+class ProductSku extends TradeActiveRecord
 {
     public static function tableName(): string
     {

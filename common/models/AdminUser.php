@@ -6,7 +6,7 @@ namespace common\models;
 
 use Yii;
 use yii\behaviors\TimestampBehavior;
-use yii\db\ActiveRecord;
+use common\base\AdminActiveRecord;
 use yii\web\IdentityInterface;
 
 /**
@@ -23,7 +23,7 @@ use yii\web\IdentityInterface;
  * @property int $created_at
  * @property int $updated_at
  */
-class AdminUser extends ActiveRecord implements IdentityInterface
+class AdminUser extends AdminActiveRecord implements IdentityInterface
 {
     public const STATUS_ACTIVE = 0;
     public const STATUS_DISABLED = 1;

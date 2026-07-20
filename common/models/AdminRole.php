@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace common\models;
 
 use yii\behaviors\TimestampBehavior;
-use yii\db\ActiveRecord;
+use common\base\AdminActiveRecord;
 
 /**
  * AdminRole model —— 后台角色（对齐 docs/dev/02-数据库设计 §9.6）。
@@ -16,7 +16,7 @@ use yii\db\ActiveRecord;
  * @property int $created_at
  * @property int $updated_at
  */
-class AdminRole extends ActiveRecord
+class AdminRole extends AdminActiveRecord
 {
     public static function tableName(): string
     {

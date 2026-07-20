@@ -145,7 +145,7 @@ class AdminOrderService
         $agree = (bool) ($in['agree'] ?? false);
         $remark = '[平台仲裁] ' . (string) ($in['remark'] ?? '');
 
-        $tx = Yii::$app->db->beginTransaction();
+        $tx = ShopOrder::getDb()->beginTransaction();
         try {
             if ($agree) {
                 $refund->status = OrderRefund::STATUS_DONE;

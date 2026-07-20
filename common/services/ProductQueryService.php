@@ -132,9 +132,12 @@ class ProductQueryService
      */
     private function onSaleQuery(): \yii\db\ActiveQuery
     {
+        // 跨库（shop@shop × product@trade）：先在商家库取正常店铺 id 数组，
+        // 再传给商品库查询（不能用 ActiveQuery 子查询对象，跨连接会执行失败）。
         $activeShopIds = Shop::find()
             ->select('id')
-            ->where(['status' => Shop::STATUS_ACTIVE]);
+            ->where(['status' => Shop::STATUS_ACTIVE])
+            ->column();
 
         return Product::find()
             ->where(['status' => Product::STATUS_ON])

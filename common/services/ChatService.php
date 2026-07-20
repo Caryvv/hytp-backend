@@ -119,7 +119,7 @@ class ChatService
         }
         $toUser = $conv->otherUserId($userId);
 
-        $tx = Yii::$app->db->beginTransaction();
+        $tx = ChatConversation::getDb()->beginTransaction();
         try {
             $msg = new ChatMessage();
             $msg->conversation_id = $conv->getId();

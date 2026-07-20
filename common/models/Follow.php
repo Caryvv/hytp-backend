@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace common\models;
 
 use yii\behaviors\TimestampBehavior;
-use yii\db\ActiveRecord;
+use common\base\SocialActiveRecord;
 
 /**
  * Follow model —— 关注关系（对齐 docs/dev/02-数据库设计 §4.3）。
@@ -16,7 +16,7 @@ use yii\db\ActiveRecord;
  * @property int $follow_user_id 被关注者
  * @property int $created_at
  */
-class Follow extends ActiveRecord
+class Follow extends SocialActiveRecord
 {
     public static function tableName(): string
     {

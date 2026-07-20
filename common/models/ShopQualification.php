@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace common\models;
 
 use yii\behaviors\TimestampBehavior;
-use yii\db\ActiveRecord;
+use common\base\ShopActiveRecord;
 
 /**
  * ShopQualification model —— 商家资质材料（对齐 docs/dev/02-数据库设计 §2.2）。
@@ -18,7 +18,7 @@ use yii\db\ActiveRecord;
  * @property int $status 0待审 1通过 2驳回
  * @property int $created_at
  */
-class ShopQualification extends ActiveRecord
+class ShopQualification extends ShopActiveRecord
 {
     public const STATUS_PENDING = 0;
     public const STATUS_PASS = 1;

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace common\models;
 
 use yii\behaviors\TimestampBehavior;
-use yii\db\ActiveRecord;
+use common\base\SocialActiveRecord;
 
 /**
  * ChatMessage model —— 私信消息（对齐 docs/dev/02-数据库设计 §4.4）。仅 created_at。
@@ -19,7 +19,7 @@ use yii\db\ActiveRecord;
  * @property int $is_read
  * @property int $created_at
  */
-class ChatMessage extends ActiveRecord
+class ChatMessage extends SocialActiveRecord
 {
     public const TYPE_TEXT = 1;
     public const TYPE_IMAGE = 2;

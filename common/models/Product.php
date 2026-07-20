@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace common\models;
 
 use yii\behaviors\TimestampBehavior;
-use yii\db\ActiveRecord;
+use common\base\TradeActiveRecord;
 
 /**
  * Product model —— 商品（对齐 docs/dev/02-数据库设计 §3.1）。
@@ -35,7 +35,7 @@ use yii\db\ActiveRecord;
  * @property int $created_at
  * @property int $updated_at
  */
-class Product extends ActiveRecord
+class Product extends TradeActiveRecord
 {
     // 商品状态
     public const STATUS_OFF = 0;       // 下架

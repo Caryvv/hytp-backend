@@ -123,18 +123,21 @@ class DepositClaimService
         $approve = (bool) ($in['approve'] ?? false);
         $remark = (string) ($in['remark'] ?? '');
 
-        $tx = Yii::$app->db->beginTransaction();
-        try {
-            if ($approve) {
-                $shop = Shop::findOne(['id' => $claim->shop_id]);
-                if ($shop !== null) {
+        // 跨库（deposit_claim@trade × shop.deposit/shop_credit_log@shop）：拆两段事务。
+        // 先扣商家保证金+信用分（商家库事务），成功后再置 claim 成立（交易库事务）。
+        // 顺序保证：shop 段失败则 claim 不置成立，不会出现"已判定成立但未扣款"的假状态。
+        if ($approve) {
+            $shop = Shop::findOne(['id' => $claim->shop_id]);
+            if ($shop !== null) {
+                $shopTx = Shop::getDb()->beginTransaction();
+                try {
                     // 扣商家保障金（不足扣至 0）
                     $deduct = bccomp($shop->deposit, $claim->amount, 2) >= 0
                         ? $claim->amount
                         : $shop->deposit;
                     $shop->deposit = bcsub($shop->deposit, $deduct, 2);
                     $shop->save(false);
-                    // 扣信用分（流水 + 同步 credit_score）
+                    // 扣信用分（流水 + 同步 credit_score，均在商家库）
                     ShopCreditLog::record(
                         (int) $shop->id,
                         -self::CREDIT_PENALTY,
@@ -142,18 +145,25 @@ class DepositClaimService
                         'deposit_claim',
                         $claim->getId(),
                     );
+                    $shopTx->commit();
+                } catch (\Throwable $e) {
+                    $shopTx->rollBack();
+                    throw $e;
                 }
-                // 平台先行赔付退用户为 Mock（此处仅置状态；真实通道走退款）
-                $claim->status = DepositClaim::STATUS_APPROVED;
-            } else {
-                $claim->status = DepositClaim::STATUS_REJECTED;
             }
+            $claim->status = DepositClaim::STATUS_APPROVED;
+        } else {
+            $claim->status = DepositClaim::STATUS_REJECTED;
+        }
+
+        $claimTx = DepositClaim::getDb()->beginTransaction();
+        try {
             $claim->handle_remark = $remark;
             $claim->admin_id = $adminId;
             $claim->save(false);
-            $tx->commit();
+            $claimTx->commit();
         } catch (\Throwable $e) {
-            $tx->rollBack();
+            $claimTx->rollBack();
             throw $e;
         }
 

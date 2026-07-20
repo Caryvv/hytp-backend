@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace common\models;
 
 use yii\behaviors\TimestampBehavior;
-use yii\db\ActiveRecord;
+use common\base\TradeActiveRecord;
 
 /**
  * ShopOrder model —— 订单主表（表名 shop_order 避开保留字 order）。
@@ -40,7 +40,7 @@ use yii\db\ActiveRecord;
  * @property int $created_at
  * @property int $updated_at
  */
-class ShopOrder extends ActiveRecord
+class ShopOrder extends TradeActiveRecord
 {
     // 订单状态
     public const STATUS_UNPAID = 0;    // 待付款

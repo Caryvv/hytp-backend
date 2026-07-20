@@ -45,17 +45,18 @@ class FeedService
         $feed->city = (string) ($in['city'] ?? '');
         $feed->status = Feed::STATUS_NORMAL;
 
-        $tx = Yii::$app->db->beginTransaction();
+        $tx = Feed::getDb()->beginTransaction();
         try {
             if (!$feed->save()) {
                 throw new BizException(ErrorCode::PARAM_INVALID, $this->firstError($feed) ?? '发布失败');
             }
-            User::updateAllCounters(['feed_count' => 1], ['id' => $userId]);
             $tx->commit();
         } catch (\Throwable $e) {
             $tx->rollBack();
             throw $e;
         }
+        // 跨库计数（账号库 User）：提交后最终一致更新，失败不影响发布主流程
+        User::updateAllCounters(['feed_count' => 1], ['id' => $userId]);
 
         return $this->decorate($userId, [$feed])[0];
     }
@@ -130,18 +131,19 @@ class FeedService
             throw new BizException(ErrorCode::FORBIDDEN, '只能删除自己的动态');
         }
 
-        $tx = Yii::$app->db->beginTransaction();
+        $tx = Feed::getDb()->beginTransaction();
         try {
             FeedLike::deleteAll(['feed_id' => $feedId]);
             FeedFavorite::deleteAll(['feed_id' => $feedId]);
             FeedComment::deleteAll(['feed_id' => $feedId]);
             $feed->delete();
-            User::updateAllCounters(['feed_count' => -1], ['and', ['id' => $userId], ['>=', 'feed_count', 1]]);
             $tx->commit();
         } catch (\Throwable $e) {
             $tx->rollBack();
             throw $e;
         }
+        // 跨库计数（账号库 User）：提交后最终一致更新
+        User::updateAllCounters(['feed_count' => -1], ['and', ['id' => $userId], ['>=', 'feed_count', 1]]);
 
         return ['id' => $feedId];
     }
@@ -154,7 +156,7 @@ class FeedService
         $feed = $this->requireFeed($feedId);
         $exists = FeedLike::findOne(['feed_id' => $feedId, 'user_id' => $userId]);
         if ($exists === null) {
-            $tx = Yii::$app->db->beginTransaction();
+            $tx = Feed::getDb()->beginTransaction();
             try {
                 $like = new FeedLike();
                 $like->feed_id = $feedId;
@@ -189,7 +191,7 @@ class FeedService
         $feed = $this->requireFeed($feedId);
         $exists = FeedFavorite::findOne(['feed_id' => $feedId, 'user_id' => $userId]);
         if ($exists === null) {
-            $tx = Yii::$app->db->beginTransaction();
+            $tx = Feed::getDb()->beginTransaction();
             try {
                 $fav = new FeedFavorite();
                 $fav->feed_id = $feedId;
@@ -286,7 +288,7 @@ class FeedService
         $comment->parent_id = $parentId;
         $comment->content = $content;
 
-        $tx = Yii::$app->db->beginTransaction();
+        $tx = Feed::getDb()->beginTransaction();
         try {
             if (!$comment->save()) {
                 throw new BizException(ErrorCode::PARAM_INVALID, $this->firstError($comment) ?? '评论失败');

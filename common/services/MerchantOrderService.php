@@ -101,7 +101,7 @@ class MerchantOrderService
             throw new BizException(ErrorCode::ORDER_STATUS_INVALID);
         }
 
-        $tx = Yii::$app->db->beginTransaction();
+        $tx = ShopOrder::getDb()->beginTransaction();
         try {
             $now = time();
             $order->status = ShopOrder::STATUS_FINISHED;
@@ -194,7 +194,7 @@ class MerchantOrderService
         $agree = (bool) ($in['agree'] ?? false);
         $remark = (string) ($in['remark'] ?? '');
 
-        $tx = Yii::$app->db->beginTransaction();
+        $tx = ShopOrder::getDb()->beginTransaction();
         try {
             if ($agree) {
                 $refund->status = OrderRefund::STATUS_DONE;

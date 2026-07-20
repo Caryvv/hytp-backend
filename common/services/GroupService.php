@@ -29,7 +29,7 @@ class GroupService
             throw new BizException(ErrorCode::PARAM_INVALID, '群名称不能为空');
         }
 
-        $tx = Yii::$app->db->beginTransaction();
+        $tx = SocialGroup::getDb()->beginTransaction();
         try {
             $group = new SocialGroup();
             $group->name = $name;
@@ -117,7 +117,7 @@ class GroupService
         $group = $this->requireGroup($groupId);
         $exists = GroupMember::findOne(['group_id' => $groupId, 'user_id' => $userId]);
         if ($exists === null) {
-            $tx = Yii::$app->db->beginTransaction();
+            $tx = SocialGroup::getDb()->beginTransaction();
             try {
                 $this->addMember($groupId, $userId, GroupMember::ROLE_MEMBER);
                 SocialGroup::updateAllCounters(['member_count' => 1], ['id' => $groupId]);
@@ -142,7 +142,7 @@ class GroupService
             throw new BizException(ErrorCode::NOT_GROUP_MEMBER);
         }
 
-        $tx = Yii::$app->db->beginTransaction();
+        $tx = SocialGroup::getDb()->beginTransaction();
         try {
             if ((int) $member->role === GroupMember::ROLE_OWNER) {
                 // 群主退出 → 解散群

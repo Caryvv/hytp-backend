@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace common\models;
 
 use yii\behaviors\TimestampBehavior;
-use yii\db\ActiveRecord;
+use common\base\SocialActiveRecord;
 
 /**
  * SocialGroup model —— 社群（对齐 docs/dev/02-数据库设计 §4.5）。
@@ -22,7 +22,7 @@ use yii\db\ActiveRecord;
  * @property int $created_at
  * @property int $updated_at
  */
-class SocialGroup extends ActiveRecord
+class SocialGroup extends SocialActiveRecord
 {
     public const STATUS_DISBANDED = 0;
     public const STATUS_ACTIVE = 1;

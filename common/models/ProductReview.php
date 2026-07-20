@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace common\models;
 
-use yii\db\ActiveRecord;
+use common\base\TradeActiveRecord;
 
 /**
  * ProductReview model —— 商品评价（用户端只读展示，情感分析源；提交属阶段3）。
@@ -21,7 +21,7 @@ use yii\db\ActiveRecord;
  * @property array|null $keywords
  * @property int $created_at
  */
-class ProductReview extends ActiveRecord
+class ProductReview extends TradeActiveRecord
 {
     public const SENTIMENT_NEGATIVE = 0;
     public const SENTIMENT_NEUTRAL = 1;

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace common\models;
 
-use yii\db\ActiveRecord;
+use common\base\SocialActiveRecord;
 
 /**
  * GroupMember model —— 群成员（对齐 docs/dev/02-数据库设计 §4.5）。
@@ -16,7 +16,7 @@ use yii\db\ActiveRecord;
  * @property int $role 0成员 1管理 2群主
  * @property int $joined_at
  */
-class GroupMember extends ActiveRecord
+class GroupMember extends SocialActiveRecord
 {
     public const ROLE_MEMBER = 0;
     public const ROLE_ADMIN = 1;

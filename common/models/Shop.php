@@ -6,7 +6,7 @@ namespace common\models;
 
 use Yii;
 use yii\behaviors\TimestampBehavior;
-use yii\db\ActiveRecord;
+use common\base\ShopActiveRecord;
 use yii\web\IdentityInterface;
 
 /**
@@ -30,7 +30,7 @@ use yii\web\IdentityInterface;
  * @property int $created_at
  * @property int $updated_at
  */
-class Shop extends ActiveRecord implements IdentityInterface
+class Shop extends ShopActiveRecord implements IdentityInterface
 {
     // 审核/账号状态
     public const STATUS_PENDING = 0;  // 待审核
