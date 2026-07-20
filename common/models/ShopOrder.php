@@ -29,6 +29,8 @@ use yii\db\ActiveRecord;
  * @property int|null $address_id
  * @property array|null $address_snapshot
  * @property string $remark
+ * @property string $express_company
+ * @property string $express_no
  * @property int|null $paid_at
  * @property int|null $shipped_at
  * @property int|null $finished_at
@@ -71,6 +73,8 @@ class ShopOrder extends ActiveRecord
             [['user_id', 'shop_id', 'address_id', 'rent_start', 'rent_end', 'paid_at', 'shipped_at', 'finished_at'], 'integer'],
             [['order_no'], 'string', 'max' => 32],
             [['remark'], 'string', 'max' => 255],
+            [['express_company', 'express_no'], 'string', 'max' => 50],
+            [['express_company', 'express_no'], 'default', 'value' => ''],
             [['total_amount', 'pay_amount', 'commission'], 'number', 'min' => 0],
             [['address_snapshot'], 'safe'],
             [['type'], 'default', 'value' => self::TYPE_BUY],
@@ -102,6 +106,12 @@ class ShopOrder extends ActiveRecord
         return (int) $this->status === self::STATUS_SHIPPED;
     }
 
+    /** 是否可发货（商家端，仅待发货状态）。 */
+    public function isShippable(): bool
+    {
+        return (int) $this->status === self::STATUS_UNSHIP;
+    }
+
     // ---------------- 输出 ----------------
 
     public function toListArray(): array
@@ -129,6 +139,8 @@ class ShopOrder extends ActiveRecord
             'commission' => $this->commission,
             'addressId' => $this->address_id !== null ? (int) $this->address_id : null,
             'address' => $this->address_snapshot,
+            'expressCompany' => $this->express_company,
+            'expressNo' => $this->express_no,
             'updatedAt' => (int) $this->updated_at,
         ]);
     }

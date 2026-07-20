@@ -68,6 +68,12 @@ return [
                 'PATCH products/<id:\d+>' => 'product/update',
                 'POST products/<id:\d+>/toggle' => 'product/toggle',
                 'PUT products/<id:\d+>/stock' => 'product/stock',
+                // 订单管理（阶段3+）
+                'GET orders' => 'order/index',
+                'GET orders/<orderNo:\d+>' => 'order/view',
+                'POST orders/<orderNo:\d+>/ship' => 'order/ship',
+                'GET refunds' => 'order/refunds',
+                'POST refunds/<id:\d+>/handle' => 'order/handle-refund',
             ],
         ],
     ],

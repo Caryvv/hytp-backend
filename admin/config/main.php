@@ -62,6 +62,11 @@ return [
                 // 商品审核
                 'GET products' => 'product/index',
                 'POST products/<id:\d+>/audit' => 'product/audit',
+                // 订单监控 + 售后仲裁（阶段3+）
+                'GET orders' => 'order/index',
+                'GET orders/<orderNo:\d+>' => 'order/view',
+                'GET refunds' => 'order/refunds',
+                'POST refunds/<id:\d+>/arbitrate' => 'order/arbitrate',
                 // 操作日志
                 'GET logs' => 'log/index',
             ],

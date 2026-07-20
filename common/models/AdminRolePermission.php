@@ -20,6 +20,8 @@ class AdminRolePermission extends ActiveRecord
     public const PERM_SHOP_AUDIT = 'shop:audit';
     public const PERM_PRODUCT_AUDIT = 'product:audit';
     public const PERM_CONFIG_EDIT = 'config:edit';
+    public const PERM_ORDER_MANAGE = 'order:manage';        // 订单监控
+    public const PERM_REFUND_ARBITRATE = 'refund:arbitrate'; // 售后仲裁
 
     public static function tableName(): string
     {

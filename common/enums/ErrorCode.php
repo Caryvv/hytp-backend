@@ -44,6 +44,7 @@ class ErrorCode
     public const SKU_NOT_FOUND = 1213;             // 规格不存在
     public const REVIEW_ALREADY_EXISTS = 1214;     // 已评价过
     public const REVIEW_NOT_ALLOWED = 1215;        // 当前订单不可评价
+    public const REFUND_NOT_FOUND = 1216;          // 售后单不存在
 
     // 支付 1300-1399
     public const PAY_FAIL = 1301;
@@ -95,6 +96,7 @@ class ErrorCode
         self::SKU_NOT_FOUND => '商品规格不存在',
         self::REVIEW_ALREADY_EXISTS => '该商品已评价',
         self::REVIEW_NOT_ALLOWED => '当前订单不可评价',
+        self::REFUND_NOT_FOUND => '售后单不存在',
         self::PAY_FAIL => '支付失败',
         self::PAY_ORDER_NOT_FOUND => '支付单不存在',
         self::PAY_AMOUNT_MISMATCH => '支付金额不符',
