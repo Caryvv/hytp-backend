@@ -9,6 +9,8 @@ use common\behaviors\JwtAuthBehavior;
 use common\enums\ErrorCode;
 use common\exceptions\BizException;
 use common\models\User;
+use common\services\FeedService;
+use common\services\FollowService;
 use common\services\JwtService;
 use Yii;
 
@@ -62,6 +64,34 @@ class UserController extends ApiController
         }
 
         return $user->toProfileArray();
+    }
+
+    /** POST /users/{id}/follow —— 关注同袍 */
+    public function actionFollow(int $id): array
+    {
+        return (new FollowService())->follow($this->currentUser()->getId(), $id);
+    }
+
+    /** POST /users/{id}/unfollow —— 取关 */
+    public function actionUnfollow(int $id): array
+    {
+        return (new FollowService())->unfollow($this->currentUser()->getId(), $id);
+    }
+
+    /** GET /users/{id}/profile —— 同袍公开主页 */
+    public function actionPublicProfile(int $id): array
+    {
+        return (new FollowService())->profile($this->currentUser()->getId(), $id);
+    }
+
+    /** GET /users/{id}/feeds —— 某同袍的动态列表 */
+    public function actionUserFeeds(int $id): array
+    {
+        $req = Yii::$app->request;
+        return (new FeedService())->feedsByUser($this->currentUser()->getId(), $id, [
+            'page' => $req->get('page'),
+            'pageSize' => $req->get('pageSize'),
+        ]);
     }
 
     private function currentUser(): User

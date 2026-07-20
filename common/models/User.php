@@ -30,6 +30,9 @@ use yii\web\IdentityInterface;
  * @property int $status 0正常 1封禁
  * @property int $reg_source 注册来源渠道
  * @property string $auth_key 登录态 key
+ * @property int $follower_count 粉丝数
+ * @property int $following_count 关注数
+ * @property int $feed_count 动态数
  * @property int $created_at
  * @property int $updated_at
  * @property string $password write-only password
@@ -178,6 +181,24 @@ class User extends ActiveRecord implements IdentityInterface
             'city' => $this->city,
             'memberLevel' => (int) $this->member_level,
             'memberExpireAt' => $this->member_expire_at !== null ? (int) $this->member_expire_at : null,
+        ];
+    }
+
+    /**
+     * 同袍公开主页字段（对外，不含手机号/生日/会员信息）。
+     * 含社交统计计数；关注态 isFollowed/isSelf 由 Service 拼接。
+     */
+    public function toPublicArray(): array
+    {
+        return [
+            'id' => $this->getId(),
+            'nickname' => $this->nickname,
+            'avatar' => $this->avatar,
+            'gender' => (int) $this->gender,
+            'city' => $this->city,
+            'followerCount' => (int) $this->follower_count,
+            'followingCount' => (int) $this->following_count,
+            'feedCount' => (int) $this->feed_count,
         ];
     }
 

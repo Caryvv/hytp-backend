@@ -57,6 +57,12 @@ class ErrorCode
     public const REFUND_STATUS_INVALID = 1305;     // 售后状态不允许该操作
 
     // 社交 1400-1499
+    public const FEED_NOT_FOUND = 1401;         // 动态不存在
+    public const FEED_STATUS_INVALID = 1402;    // 动态状态不允许该操作
+    public const COMMENT_NOT_FOUND = 1403;      // 评论不存在
+    public const FOLLOW_SELF = 1404;            // 不能关注自己
+    public const USER_NOT_FOUND = 1405;         // 用户不存在
+
     // 文旅 1500-1599
     // 文化/内容 1600-1699
     // 商家端 1700-1799
@@ -100,6 +106,11 @@ class ErrorCode
         self::REVIEW_ALREADY_EXISTS => '该商品已评价',
         self::REVIEW_NOT_ALLOWED => '当前订单不可评价',
         self::REFUND_NOT_FOUND => '售后单不存在',
+        self::FEED_NOT_FOUND => '动态不存在',
+        self::FEED_STATUS_INVALID => '动态状态不允许该操作',
+        self::COMMENT_NOT_FOUND => '评论不存在',
+        self::FOLLOW_SELF => '不能关注自己',
+        self::USER_NOT_FOUND => '用户不存在',
         self::RENT_PARAM_INVALID => '租赁租期不合法',
         self::DEPOSIT_CLAIM_NOT_FOUND => '保障金理赔单不存在',
         self::DEPOSIT_CLAIM_STATUS_INVALID => '理赔单状态不允许该操作',
