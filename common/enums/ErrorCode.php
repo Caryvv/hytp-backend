@@ -36,9 +36,21 @@ class ErrorCode
     public const PRODUCT_STATUS_INVALID = 1205;    // 商品状态不允许该操作
     public const CATEGORY_NOT_FOUND = 1206;        // 分类不存在
     public const PRODUCT_PARAM_INVALID = 1207;     // 商品参数校验失败
+    public const CART_EMPTY = 1208;                // 购物车为空
+    public const CART_ITEM_INVALID = 1209;         // 购物车项无效
+    public const ORDER_NOT_FOUND = 1210;           // 订单不存在
+    public const ADDRESS_NOT_FOUND = 1211;         // 收货地址不存在
+    public const ADDRESS_REQUIRED = 1212;          // 缺少收货地址
+    public const SKU_NOT_FOUND = 1213;             // 规格不存在
+    public const REVIEW_ALREADY_EXISTS = 1214;     // 已评价过
+    public const REVIEW_NOT_ALLOWED = 1215;        // 当前订单不可评价
 
     // 支付 1300-1399
     public const PAY_FAIL = 1301;
+    public const PAY_ORDER_NOT_FOUND = 1302;       // 支付单不存在
+    public const PAY_AMOUNT_MISMATCH = 1303;       // 支付金额不符
+    public const PAY_ALREADY_PAID = 1304;          // 订单已支付
+    public const REFUND_STATUS_INVALID = 1305;     // 售后状态不允许该操作
 
     // 社交 1400-1499
     // 文旅 1500-1599
@@ -75,7 +87,19 @@ class ErrorCode
         self::PRODUCT_STATUS_INVALID => '商品状态不允许该操作',
         self::CATEGORY_NOT_FOUND => '分类不存在',
         self::PRODUCT_PARAM_INVALID => '商品参数校验失败',
+        self::CART_EMPTY => '购物车为空',
+        self::CART_ITEM_INVALID => '购物车商品无效',
+        self::ORDER_NOT_FOUND => '订单不存在',
+        self::ADDRESS_NOT_FOUND => '收货地址不存在',
+        self::ADDRESS_REQUIRED => '请先选择收货地址',
+        self::SKU_NOT_FOUND => '商品规格不存在',
+        self::REVIEW_ALREADY_EXISTS => '该商品已评价',
+        self::REVIEW_NOT_ALLOWED => '当前订单不可评价',
         self::PAY_FAIL => '支付失败',
+        self::PAY_ORDER_NOT_FOUND => '支付单不存在',
+        self::PAY_AMOUNT_MISMATCH => '支付金额不符',
+        self::PAY_ALREADY_PAID => '订单已支付',
+        self::REFUND_STATUS_INVALID => '售后状态不允许该操作',
         self::SHOP_NOT_AUDITED => '商家未通过审核',
         self::SHOP_NOT_FOUND => '商家不存在',
         self::SHOP_STATUS_INVALID => '商家状态不允许该操作',
