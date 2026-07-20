@@ -62,6 +62,11 @@ class ErrorCode
     public const COMMENT_NOT_FOUND = 1403;      // 评论不存在
     public const FOLLOW_SELF = 1404;            // 不能关注自己
     public const USER_NOT_FOUND = 1405;         // 用户不存在
+    public const CONVERSATION_NOT_FOUND = 1406; // 会话不存在
+    public const GROUP_NOT_FOUND = 1407;        // 社群不存在
+    public const NOT_GROUP_MEMBER = 1408;       // 非群成员
+    public const ALREADY_GROUP_MEMBER = 1409;   // 已是群成员
+    public const GROUP_FORBIDDEN = 1410;        // 无群操作权限
 
     // 文旅 1500-1599
     // 文化/内容 1600-1699
@@ -111,6 +116,11 @@ class ErrorCode
         self::COMMENT_NOT_FOUND => '评论不存在',
         self::FOLLOW_SELF => '不能关注自己',
         self::USER_NOT_FOUND => '用户不存在',
+        self::CONVERSATION_NOT_FOUND => '会话不存在',
+        self::GROUP_NOT_FOUND => '社群不存在',
+        self::NOT_GROUP_MEMBER => '你不是该群成员',
+        self::ALREADY_GROUP_MEMBER => '已加入该群',
+        self::GROUP_FORBIDDEN => '无该群操作权限',
         self::RENT_PARAM_INVALID => '租赁租期不合法',
         self::DEPOSIT_CLAIM_NOT_FOUND => '保障金理赔单不存在',
         self::DEPOSIT_CLAIM_STATUS_INVALID => '理赔单状态不允许该操作',
