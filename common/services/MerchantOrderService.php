@@ -200,11 +200,15 @@ class MerchantOrderService
                 $refund->status = OrderRefund::STATUS_DONE;
                 $refund->handle_remark = $remark;
                 $refund->save(false);
-                // 关联支付单置已退款
-                Payment::updateAll(
-                    ['status' => Payment::STATUS_REFUNDED],
-                    ['order_id' => $order->getId(), 'status' => Payment::STATUS_PAID]
-                );
+                // 关联支付单置已退款 + 代币退款回补余额
+                $payments = Payment::findAll([
+                    'order_id' => $order->getId(),
+                    'status' => Payment::STATUS_PAID,
+                ]);
+                $paymentService = new \common\services\PaymentService();
+                foreach ($payments as $p) {
+                    $paymentService->refund($p);
+                }
                 // 订单保持 STATUS_REFUND 作为售后完成终态
             } else {
                 $refund->status = OrderRefund::STATUS_REJECTED;

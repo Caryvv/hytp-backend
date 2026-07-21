@@ -115,6 +115,7 @@ class AuthService
         $user->phone = $phone;
         $user->password_hash = ''; // 未设密码，后续可在设置页补
         $user->nickname = '同袍' . substr($phone, -4);
+        $user->balance = '1000.00'; // 新用户注册赠送 1000 代币
         $user->status = User::STATUS_ACTIVE;
         $user->generateAuthKey();
 

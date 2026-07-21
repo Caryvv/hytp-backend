@@ -31,8 +31,9 @@ class Payment extends TradeActiveRecord
     public const STATUS_REFUNDED = 3; // 已退款
 
     // 支付渠道
-    public const CHANNEL_WECHAT = 1;
-    public const CHANNEL_ALIPAY = 2;
+    public const CHANNEL_COIN = 1;   // 代币
+    public const CHANNEL_WECHAT = 2; // 微信（预留）
+    public const CHANNEL_ALIPAY = 3; // 支付宝（预留）
 
     public static function tableName(): string
     {
@@ -54,8 +55,8 @@ class Payment extends TradeActiveRecord
             [['pay_no'], 'string', 'max' => 32],
             [['trade_no'], 'string', 'max' => 64],
             [['amount'], 'number', 'min' => 0],
-            [['channel'], 'in', 'range' => [self::CHANNEL_WECHAT, self::CHANNEL_ALIPAY]],
-            [['channel'], 'default', 'value' => self::CHANNEL_WECHAT],
+            [['channel'], 'in', 'range' => [self::CHANNEL_COIN, self::CHANNEL_WECHAT, self::CHANNEL_ALIPAY]],
+            [['channel'], 'default', 'value' => self::CHANNEL_COIN],
             [['status'], 'in', 'range' => [
                 self::STATUS_PENDING, self::STATUS_PAID, self::STATUS_FAILED, self::STATUS_REFUNDED,
             ]],

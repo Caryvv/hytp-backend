@@ -18,8 +18,18 @@ return [
     'jwt.refreshSecret' => 'CHANGE_ME_refresh_secret', // 生产必须在 params-local 覆盖
 
     // 短信验证码
-    'sms.mock' => true,                   // true=开发 Mock（不真发，写日志）
-    'sms.codeTtl' => 300,                 // 验证码有效期（秒）
-    'sms.resendInterval' => 60,           // 同号重发间隔（秒）
-    'sms.ipDailyLimit' => 50,             // 同 IP 每日发送上限
+    'sms.driver' => 'mock',                // mock=开发Mock, aliyun=真实阿里云（预留）
+    'sms.mock' => true,                    // true=开发 Mock（不真发，写日志）
+    'sms.codeTtl' => 300,                  // 验证码有效期（秒）
+    'sms.resendInterval' => 60,            // 同号重发间隔（秒）
+    'sms.ipDailyLimit' => 50,              // 同 IP 每日发送上限
+
+    // 文件上传
+    'upload.driver' => 'local',            // local=本地存储, oss=阿里云OSS（预留）
+    'upload.baseUrl' => '',                // 文件访问基础 URL，留空用相对路径
+    // OSS 预留配置（driver=oss 时生效）
+    // 'upload.oss.accessKeyId' => '',
+    // 'upload.oss.accessKeySecret' => '',
+    // 'upload.oss.endpoint' => '',
+    // 'upload.oss.bucket' => '',
 ];

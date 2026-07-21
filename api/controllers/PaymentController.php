@@ -38,13 +38,12 @@ class PaymentController extends ApiController
         return (new PaymentService())->pay($this->currentUser()->getId(), $orderNo, $channel);
     }
 
-    /** POST /pay/mock/confirm —— 模拟支付回调改单 { payNo } */
+    /** POST /pay/mock/confirm —— 支付确认回调（代币支付幂等；真实通道回调） */
     public function actionMockConfirm(): array
     {
-        // 需登录以防他人乱触发；订单归属在 payment→order 已隐含
         $this->currentUser();
         $payNo = (string) Yii::$app->request->post('payNo', '');
-        return (new PaymentService())->mockConfirm($payNo);
+        return (new PaymentService())->confirm($payNo);
     }
 
     private function currentUser(): User

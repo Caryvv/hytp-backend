@@ -68,6 +68,12 @@ class ErrorCode
     public const ALREADY_GROUP_MEMBER = 1409;   // 已是群成员
     public const GROUP_FORBIDDEN = 1410;        // 无群操作权限
 
+    // 文件上传 1306-1309
+    public const UPLOAD_FAILED = 1306;
+    public const UPLOAD_TYPE_INVALID = 1307;
+    public const UPLOAD_SIZE_EXCEEDED = 1308;
+    public const BALANCE_NOT_ENOUGH = 1309;
+
     // 文旅 1500-1599
     // 文化/内容 1600-1699
     // 商家端 1700-1799
@@ -129,6 +135,10 @@ class ErrorCode
         self::PAY_AMOUNT_MISMATCH => '支付金额不符',
         self::PAY_ALREADY_PAID => '订单已支付',
         self::REFUND_STATUS_INVALID => '售后状态不允许该操作',
+        self::UPLOAD_FAILED => '文件上传失败',
+        self::UPLOAD_TYPE_INVALID => '不支持的文件类型',
+        self::UPLOAD_SIZE_EXCEEDED => '文件大小超出限制',
+        self::BALANCE_NOT_ENOUGH => '代币余额不足',
         self::SHOP_NOT_AUDITED => '商家未通过审核',
         self::SHOP_NOT_FOUND => '商家不存在',
         self::SHOP_STATUS_INVALID => '商家状态不允许该操作',

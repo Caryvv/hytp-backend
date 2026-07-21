@@ -33,6 +33,7 @@ use yii\web\IdentityInterface;
  * @property int $follower_count 粉丝数
  * @property int $following_count 关注数
  * @property int $feed_count 动态数
+ * @property string $balance 代币余额
  * @property int $created_at
  * @property int $updated_at
  * @property string $password write-only password
@@ -181,6 +182,7 @@ class User extends ActiveRecord implements IdentityInterface
             'city' => $this->city,
             'memberLevel' => (int) $this->member_level,
             'memberExpireAt' => $this->member_expire_at !== null ? (int) $this->member_expire_at : null,
+            'balance' => $this->balance ?? '0.00',
         ];
     }
 

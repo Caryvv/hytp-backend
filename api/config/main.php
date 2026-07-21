@@ -89,6 +89,8 @@ return [
                 // 支付（Mock）
                 'POST pay' => 'payment/pay',
                 'POST pay/mock/confirm' => 'payment/mock-confirm',
+                // 文件上传
+                'POST upload' => 'upload/upload',
                 // 社交（阶段4 P0，均需登录）
                 'GET feeds' => 'feed/index',
                 'POST feeds' => 'feed/create',
