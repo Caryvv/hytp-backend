@@ -25,7 +25,7 @@ class UploadController extends \common\base\ApiController
         $behaviors['jwt'] = [
             'class' => \common\behaviors\JwtAuthBehavior::class,
             'aud' => \common\services\JwtService::AUD_APP,
-            'optional' => false,
+            // optional 默认 []（空=全部 action 强制登录），不要传布尔
         ];
         return $behaviors;
     }
