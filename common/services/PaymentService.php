@@ -9,6 +9,7 @@ use common\exceptions\BizException;
 use common\models\Payment;
 use common\models\ShopOrder;
 use common\models\User;
+use common\models\WalletTransaction;
 use Yii;
 
 /**
@@ -117,6 +118,15 @@ class PaymentService
         $user = User::findOne(['id' => $userId]);
         $balanceAfter = $user !== null ? $user->balance : '0.00';
 
+        // 记同袍币消费流水（余额已在上方扣减，这里只记账）
+        (new WalletService())->log(
+            $userId,
+            WalletTransaction::TYPE_CONSUME,
+            -WalletService::yuanToCoin($amount),
+            WalletService::yuanToCoin($balanceAfter),
+            ['channel' => Payment::CHANNEL_COIN, 'refType' => 'order', 'refId' => (string) $order->getId(), 'remark' => '订单支付'],
+        );
+
         return [
             'payNo' => $payment->pay_no,
             'orderNo' => $order->order_no,
@@ -223,6 +233,15 @@ class PaymentService
 
         if ((int) $payment->channel === Payment::CHANNEL_COIN && $userId !== null) {
             User::updateAllCounters(['balance' => $refundAmount], ['id' => $userId]);
+            // 记同袍币退款流水
+            $wallet = new WalletService();
+            $wallet->log(
+                $userId,
+                WalletTransaction::TYPE_REFUND,
+                WalletService::yuanToCoin($refundAmount),
+                $wallet->currentCoin($userId),
+                ['channel' => Payment::CHANNEL_COIN, 'refType' => 'order', 'refId' => (string) $payment->order_id, 'remark' => '订单退款'],
+            );
         }
         // 真实通道退款：预留，走 SDK 退款接口
         // TODO: 微信/支付宝退款
