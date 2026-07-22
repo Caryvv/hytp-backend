@@ -56,7 +56,7 @@ class ProductSku extends TradeActiveRecord
         return [
             'id' => $this->getId(),
             'productId' => (int) $this->product_id,
-            'spec' => $this->spec_json ?? [],
+            'spec' => (object) ($this->spec_json ?? []), // 空时输出 {} 而非 []，避免前端 Map 解析崩
             'price' => $this->price,
             'stock' => (int) $this->stock,
             'skuCode' => $this->sku_code,

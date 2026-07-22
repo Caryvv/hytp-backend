@@ -63,7 +63,7 @@ class OrderItem extends TradeActiveRecord
             'productId' => (int) $this->product_id,
             'skuId' => $this->sku_id !== null ? (int) $this->sku_id : null,
             'title' => $this->title_snapshot,
-            'spec' => $this->spec_snapshot ?? [],
+            'spec' => (object) ($this->spec_snapshot ?? []), // 空时输出 {} 而非 []，避免前端 Map 解析崩
             'price' => $this->price,
             'qty' => (int) $this->qty,
             'image' => $this->image_snapshot,

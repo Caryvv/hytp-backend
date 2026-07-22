@@ -170,7 +170,9 @@ class CartService
             'tradeType' => (int) $cart->trade_type,
             'title' => $product !== null ? $product->title : '',
             'cover' => $product !== null ? $product->cover : '',
-            'spec' => $sku !== null ? ($sku->spec_json ?? []) : [],
+            // spec 是 key-value 规格对象；空时强转 (object) 使 JSON 输出 {} 而非 []，
+            // 否则 Android kotlinx 反序列化 Map 遇到 [] 会崩。
+            'spec' => (object) ($sku !== null ? ($sku->spec_json ?? []) : []),
             'price' => $price,
             'stock' => $stock,
             'shopId' => $product !== null ? (int) $product->shop_id : 0,

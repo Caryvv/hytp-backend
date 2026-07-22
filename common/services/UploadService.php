@@ -90,9 +90,18 @@ class UploadService
      */
     private function validate(UploadedFile $file): void
     {
+        // MIME 具体（image/png 等）则按白名单校验；泛化(image/*)或缺失时回退到扩展名判断，
+        // 避免个别客户端传 image/* 或空 MIME 就误拒。
         $mime = $file->type;
-        if ($mime && !in_array($mime, self::ALLOWED_TYPES, true)) {
-            throw new BizException(ErrorCode::UPLOAD_TYPE_INVALID);
+        if ($mime && $mime !== 'application/octet-stream' && !str_contains($mime, '*')) {
+            if (!in_array($mime, self::ALLOWED_TYPES, true)) {
+                throw new BizException(ErrorCode::UPLOAD_TYPE_INVALID);
+            }
+        } else {
+            $ext = strtolower($file->getExtension());
+            if (!in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'gif'], true)) {
+                throw new BizException(ErrorCode::UPLOAD_TYPE_INVALID);
+            }
         }
 
         if ($file->size > self::MAX_SIZE) {
