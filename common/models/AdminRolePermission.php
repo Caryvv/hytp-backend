@@ -23,6 +23,7 @@ class AdminRolePermission extends AdminActiveRecord
     public const PERM_ORDER_MANAGE = 'order:manage';        // 订单监控
     public const PERM_REFUND_ARBITRATE = 'refund:arbitrate'; // 售后仲裁
     public const PERM_DEPOSIT_ARBITRATE = 'deposit:arbitrate'; // 品质保障金理赔
+    public const PERM_FEED_AUDIT = 'feed:audit';            // 动态巡查下架
 
     public static function tableName(): string
     {

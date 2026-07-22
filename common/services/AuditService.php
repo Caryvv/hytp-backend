@@ -6,8 +6,10 @@ namespace common\services;
 
 use common\enums\ErrorCode;
 use common\exceptions\BizException;
+use common\models\Feed;
 use common\models\Product;
 use common\models\Shop;
+use common\models\User;
 
 /**
  * 管理端审核业务：商家入驻审核、商品上架审核。
@@ -151,5 +153,93 @@ class AuditService
             throw new BizException(ErrorCode::INTERNAL_ERROR, '审核保存失败');
         }
         return $product->toDetailArray();
+    }
+
+    // ---------------- 动态巡查（先发后审：默认正常，违规下架，可恢复） ----------------
+
+    /**
+     * 动态巡查列表（默认 status=正常）。支持按状态/作者筛选。
+     *
+     * @param array<string,mixed> $in 支持 status/userId/page/pageSize
+     * @return array{list:array<int,array>, pagination:array{page:int,pageSize:int,total:int}}
+     */
+    public function feedList(array $in): array
+    {
+        $page = max(1, (int) ($in['page'] ?? 1));
+        $pageSize = min(50, max(1, (int) ($in['pageSize'] ?? 20)));
+
+        $query = Feed::find();
+        $status = $in['status'] ?? Feed::STATUS_NORMAL;
+        if ($status !== '') {
+            $query->andWhere(['status' => (int) $status]);
+        }
+        if (!empty($in['userId'])) {
+            $query->andWhere(['user_id' => (int) $in['userId']]);
+        }
+
+        $total = (int) $query->count();
+        /** @var Feed[] $rows */
+        $rows = $query->orderBy(['id' => SORT_DESC])
+            ->offset(($page - 1) * $pageSize)
+            ->limit($pageSize)
+            ->all();
+
+        // 批量拼作者昵称，防 N+1
+        $authorIds = array_values(array_unique(array_filter(
+            array_map(static fn (Feed $f): int => (int) $f->user_id, $rows)
+        )));
+        $authors = [];
+        if ($authorIds !== []) {
+            foreach (User::find()->where(['id' => $authorIds])->all() as $u) {
+                /** @var User $u */
+                $authors[$u->getId()] = $u->toPublicArray();
+            }
+        }
+
+        $list = array_map(static function (Feed $f) use ($authors): array {
+            $view = $f->toAdminArray();
+            $view['author'] = $authors[(int) $f->user_id] ?? null;
+            return $view;
+        }, $rows);
+
+        return [
+            'list' => $list,
+            'pagination' => ['page' => $page, 'pageSize' => $pageSize, 'total' => $total],
+        ];
+    }
+
+    /**
+     * 巡查处置：下架违规动态 或 恢复已下架动态。
+     *
+     * @param bool $off true 下架（正常→下架，填理由），false 恢复（下架→正常）
+     */
+    public function setFeedStatus(int $feedId, bool $off, string $remark = ''): array
+    {
+        $feed = Feed::findOne(['id' => $feedId]);
+        if ($feed === null) {
+            throw new BizException(ErrorCode::FEED_NOT_FOUND);
+        }
+
+        if ($off) {
+            if ((int) $feed->status !== Feed::STATUS_NORMAL) {
+                throw new BizException(ErrorCode::FEED_STATUS_INVALID, '仅正常动态可下架');
+            }
+            if (trim($remark) === '') {
+                throw new BizException(ErrorCode::PARAM_INVALID, '下架需填写理由');
+            }
+            $feed->status = Feed::STATUS_OFF;
+            $feed->off_reason = $remark;
+        } else {
+            if ((int) $feed->status !== Feed::STATUS_OFF) {
+                throw new BizException(ErrorCode::FEED_STATUS_INVALID, '仅已下架动态可恢复');
+            }
+            $feed->status = Feed::STATUS_NORMAL;
+            $feed->off_reason = '';
+        }
+
+        if (!$feed->save(false)) {
+            throw new BizException(ErrorCode::INTERNAL_ERROR, '处置保存失败');
+        }
+        return $feed->toAdminArray();
     }
 }

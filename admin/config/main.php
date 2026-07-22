@@ -70,6 +70,9 @@ return [
                 // 品质保障金理赔（阶段3+ P1）
                 'GET deposit-claims' => 'deposit-claim/index',
                 'POST deposit-claims/<id:\d+>/arbitrate' => 'deposit-claim/arbitrate',
+                // 动态巡查（先发后审·下架/恢复）
+                'GET feeds' => 'feed/index',
+                'POST feeds/<id:\d+>/audit' => 'feed/audit',
                 // 操作日志
                 'GET logs' => 'log/index',
             ],

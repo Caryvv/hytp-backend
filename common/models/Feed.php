@@ -24,6 +24,7 @@ use common\base\SocialActiveRecord;
  * @property int $favorite_count
  * @property int $share_count
  * @property int $status 0待审 1正常 2下架
+ * @property string $off_reason 违规下架理由
  * @property int $created_at
  * @property int $updated_at
  */
@@ -94,6 +95,16 @@ class Feed extends SocialActiveRecord
     {
         return array_merge($this->toListArray(), [
             'updatedAt' => (int) $this->updated_at,
+        ]);
+    }
+
+    /**
+     * 管理端巡查视图：含下架理由，不含 isLiked/isFavorited；作者昵称由 Service 批量拼。
+     */
+    public function toAdminArray(): array
+    {
+        return array_merge($this->toDetailArray(), [
+            'offReason' => $this->off_reason,
         ]);
     }
 }
