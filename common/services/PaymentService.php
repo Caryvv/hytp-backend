@@ -126,6 +126,7 @@ class PaymentService
             WalletService::yuanToCoin($balanceAfter),
             ['channel' => Payment::CHANNEL_COIN, 'refType' => 'order', 'refId' => (string) $order->getId(), 'remark' => '订单支付'],
         );
+        (new TaskService())->award($userId, TaskService::TASK_FIRST_ORDER); // 首单奖励（一次性），吞异常不影响支付
 
         return [
             'payNo' => $payment->pay_no,
@@ -217,6 +218,7 @@ class PaymentService
             $tx->rollBack();
             throw $e;
         }
+        (new TaskService())->award((int) $order->user_id, TaskService::TASK_FIRST_ORDER); // 首单奖励（一次性），吞异常不影响回调
 
         return ['orderNo' => $order->order_no, 'status' => (int) $order->status, 'paid' => true];
     }

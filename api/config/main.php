@@ -92,6 +92,9 @@ return [
                 // 同袍币充值（Mock）
                 'POST wallet/recharge' => 'wallet/recharge',
                 'POST wallet/recharge/mock/confirm' => 'wallet/mock-confirm',
+                // 任务系统（赚同袍币）
+                'GET tasks' => 'task/index',
+                'POST tasks/claim' => 'task/claim',
                 // 文件上传
                 'POST upload' => 'upload/upload',
                 // 社交（阶段4 P0，均需登录）

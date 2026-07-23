@@ -38,6 +38,7 @@ class FollowService
             User::updateAllCounters(['following_count' => 1], ['id' => $userId]);
             User::updateAllCounters(['follower_count' => 1], ['id' => $targetId]);
             $target->refresh();
+            (new TaskService())->award($userId, TaskService::TASK_FOLLOW_USER); // 每日关注奖励，吞异常不影响主流程
         }
         return ['followed' => true, 'followerCount' => (int) $target->follower_count];
     }

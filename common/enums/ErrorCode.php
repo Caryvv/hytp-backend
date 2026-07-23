@@ -48,6 +48,8 @@ class ErrorCode
     public const RENT_PARAM_INVALID = 1217;        // 租赁参数（租期）非法
     public const DEPOSIT_CLAIM_NOT_FOUND = 1218;   // 保障金索赔单不存在
     public const DEPOSIT_CLAIM_STATUS_INVALID = 1219; // 索赔单状态不允许该操作
+    public const TASK_NOT_FOUND = 1220;            // 任务不存在
+    public const TASK_ALREADY_DONE = 1221;         // 任务已完成/已领取
 
     // 支付 1300-1399
     public const PAY_FAIL = 1301;
@@ -132,6 +134,8 @@ class ErrorCode
         self::RENT_PARAM_INVALID => '租赁租期不合法',
         self::DEPOSIT_CLAIM_NOT_FOUND => '保障金理赔单不存在',
         self::DEPOSIT_CLAIM_STATUS_INVALID => '理赔单状态不允许该操作',
+        self::TASK_NOT_FOUND => '任务不存在',
+        self::TASK_ALREADY_DONE => '任务已完成，请勿重复领取',
         self::PAY_FAIL => '支付失败',
         self::PAY_ORDER_NOT_FOUND => '支付单不存在',
         self::PAY_AMOUNT_MISMATCH => '支付金额不符',

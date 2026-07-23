@@ -57,6 +57,7 @@ class FeedService
         }
         // 跨库计数（账号库 User）：提交后最终一致更新，失败不影响发布主流程
         User::updateAllCounters(['feed_count' => 1], ['id' => $userId]);
+        (new TaskService())->award($userId, TaskService::TASK_PUBLISH_FEED); // 每日发动态奖励，吞异常不影响主流程
 
         return $this->decorate($userId, [$feed])[0];
     }
