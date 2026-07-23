@@ -53,6 +53,16 @@ class GroupController extends ApiController
         ]);
     }
 
+    /** GET /groups/mine —— 我加入的社群（附未读，用于消息中心） */
+    public function actionMine(): array
+    {
+        $req = Yii::$app->request;
+        return (new GroupService())->myGroups($this->currentUser()->getId(), [
+            'page' => $req->get('page'),
+            'pageSize' => $req->get('pageSize'),
+        ]);
+    }
+
     /** GET /groups/{id} —— 社群详情 */
     public function actionView(int $id): array
     {

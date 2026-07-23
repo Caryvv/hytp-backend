@@ -14,6 +14,7 @@ use common\base\SocialActiveRecord;
  * @property int $group_id
  * @property int $user_id
  * @property int $role 0成员 1管理 2群主
+ * @property int $last_read_id 已读到的最大群消息id（群未读游标）
  * @property int $joined_at
  */
 class GroupMember extends SocialActiveRecord
@@ -31,7 +32,7 @@ class GroupMember extends SocialActiveRecord
     {
         return [
             [['group_id', 'user_id'], 'required'],
-            [['group_id', 'user_id', 'joined_at'], 'integer'],
+            [['group_id', 'user_id', 'joined_at', 'last_read_id'], 'integer'],
             [['role'], 'in', 'range' => [self::ROLE_MEMBER, self::ROLE_ADMIN, self::ROLE_OWNER]],
             [['role'], 'default', 'value' => self::ROLE_MEMBER],
         ];

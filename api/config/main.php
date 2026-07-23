@@ -122,6 +122,7 @@ return [
                 // 社群
                 'GET groups' => 'group/index',
                 'POST groups' => 'group/create',
+                'GET groups/mine' => 'group/mine',
                 'GET groups/<id:\d+>' => 'group/view',
                 'POST groups/<id:\d+>/join' => 'group/join',
                 'POST groups/<id:\d+>/quit' => 'group/quit',

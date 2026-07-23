@@ -101,6 +101,62 @@ class GroupService
     }
 
     /**
+     * 我加入的社群（附我的角色 + 未读数），用于消息中心聚合。按群 id 倒序。
+     *
+     * @param array<string,mixed> $in page, pageSize
+     * @return array{list:array<int,array>, pagination:array{page:int,pageSize:int,total:int}}
+     */
+    public function myGroups(int $userId, array $in): array
+    {
+        $page = max(1, (int) ($in['page'] ?? 1));
+        $pageSize = min(50, max(1, (int) ($in['pageSize'] ?? 20)));
+
+        // 我的成员记录：group_id => last_read_id / role
+        $members = GroupMember::find()->where(['user_id' => $userId])->all();
+        $readMap = [];
+        $roleMap = [];
+        foreach ($members as $m) {
+            /** @var GroupMember $m */
+            $readMap[(int) $m->group_id] = (int) $m->last_read_id;
+            $roleMap[(int) $m->group_id] = (int) $m->role;
+        }
+        $groupIds = array_keys($readMap);
+        if ($groupIds === []) {
+            return ['list' => [], 'pagination' => ['page' => $page, 'pageSize' => $pageSize, 'total' => 0]];
+        }
+
+        $query = SocialGroup::find()
+            ->where(['status' => SocialGroup::STATUS_ACTIVE, 'id' => $groupIds]);
+        $total = (int) $query->count();
+        $rows = $query->orderBy(['id' => SORT_DESC])
+            ->offset(($page - 1) * $pageSize)
+            ->limit($pageSize)
+            ->all();
+
+        $list = [];
+        foreach ($rows as $g) {
+            /** @var SocialGroup $g */
+            $gid = $g->getId();
+            // ponytail: N+1 count per joined group, batch if 群数变大
+            $unread = (int) GroupMessage::find()
+                ->where(['group_id' => $gid])
+                ->andWhere(['>', 'id', $readMap[$gid] ?? 0])
+                ->andWhere(['!=', 'from_user', $userId])
+                ->count();
+            $list[] = array_merge($g->toArray(), [
+                'isJoined' => true,
+                'myRole' => $roleMap[$gid] ?? null,
+                'unread' => $unread,
+            ]);
+        }
+
+        return [
+            'list' => $list,
+            'pagination' => ['page' => $page, 'pageSize' => $pageSize, 'total' => $total],
+        ];
+    }
+
+    /**
      * 社群详情（附我的角色 + 是否加入）。
      */
     public function detail(int $userId, int $groupId): array
@@ -205,7 +261,7 @@ class GroupService
     public function groupMessages(int $userId, int $groupId, array $in): array
     {
         $this->requireGroup($groupId);
-        $this->requireMember($groupId, $userId);
+        $member = $this->requireMember($groupId, $userId);
         $afterId = (int) ($in['afterId'] ?? 0);
         $limit = min(100, max(1, (int) ($in['limit'] ?? 50)));
 
@@ -214,6 +270,13 @@ class GroupService
             $query->andWhere(['>', 'id', $afterId]);
         }
         $rows = $query->orderBy(['id' => SORT_ASC])->limit($limit)->all();
+
+        // 打开群聊即全部已读：把已读游标推进到该群最新消息 id（用 MAX(id) 而非本次拉取集，
+        // 因这里从最旧分页，拉取集不一定含最新）。
+        $maxId = (int) GroupMessage::find()->where(['group_id' => $groupId])->max('id');
+        if ($maxId > (int) $member->last_read_id) {
+            GroupMember::updateAll(['last_read_id' => $maxId], ['group_id' => $groupId, 'user_id' => $userId]);
+        }
 
         // 批量查发送者
         $senders = $this->userViews(array_map(static fn (GroupMessage $m): int => (int) $m->from_user, $rows));
