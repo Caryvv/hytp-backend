@@ -97,6 +97,9 @@ return [
                 'POST tasks/claim' => 'task/claim',
                 // 文件上传
                 'POST upload' => 'upload/upload',
+                // 首页（免登录）
+                'GET home/banners' => 'home/banners',
+                'GET home/feed' => 'home/feed',
                 // 社交（阶段4 P0，均需登录）
                 'GET feeds' => 'feed/index',
                 'POST feeds' => 'feed/create',
