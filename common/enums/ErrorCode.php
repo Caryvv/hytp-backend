@@ -71,6 +71,8 @@ class ErrorCode
     public const NOT_GROUP_MEMBER = 1408;       // 非群成员
     public const ALREADY_GROUP_MEMBER = 1409;   // 已是群成员
     public const GROUP_FORBIDDEN = 1410;        // 无群操作权限
+    public const TIP_SELF = 1411;               // 不能打赏自己的动态
+    public const TIP_AMOUNT_INVALID = 1412;     // 打赏金额非法
 
     // 文件上传 1306-1309
     public const UPLOAD_FAILED = 1306;
@@ -131,6 +133,8 @@ class ErrorCode
         self::NOT_GROUP_MEMBER => '你不是该群成员',
         self::ALREADY_GROUP_MEMBER => '已加入该群',
         self::GROUP_FORBIDDEN => '无该群操作权限',
+        self::TIP_SELF => '不能打赏自己的动态',
+        self::TIP_AMOUNT_INVALID => '打赏金额非法',
         self::RENT_PARAM_INVALID => '租赁租期不合法',
         self::DEPOSIT_CLAIM_NOT_FOUND => '保障金理赔单不存在',
         self::DEPOSIT_CLAIM_STATUS_INVALID => '理赔单状态不允许该操作',

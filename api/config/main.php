@@ -107,6 +107,7 @@ return [
                 'POST feeds/<id:\d+>/favorite' => 'feed/favorite',
                 'POST feeds/<id:\d+>/unfavorite' => 'feed/unfavorite',
                 'POST feeds/<id:\d+>/share' => 'feed/share',
+                'POST feeds/<id:\d+>/tip' => 'feed/tip',
                 'GET feeds/<id:\d+>/comments' => 'feed/comments',
                 'POST feeds/<id:\d+>/comments' => 'feed/comment',
                 'POST users/<id:\d+>/follow' => 'user/follow',

@@ -23,6 +23,8 @@ use common\base\SocialActiveRecord;
  * @property int $comment_count
  * @property int $favorite_count
  * @property int $share_count
+ * @property int $tip_count 打赏人次
+ * @property int $tip_coin 累计收到同袍币
  * @property int $status 0待审 1正常 2下架
  * @property string $off_reason 违规下架理由
  * @property int $created_at
@@ -86,6 +88,8 @@ class Feed extends SocialActiveRecord
             'commentCount' => (int) $this->comment_count,
             'favoriteCount' => (int) $this->favorite_count,
             'shareCount' => (int) $this->share_count,
+            'tipCount' => (int) $this->tip_count,
+            'tipCoin' => (int) $this->tip_coin,
             'status' => (int) $this->status,
             'createdAt' => (int) $this->created_at,
         ];

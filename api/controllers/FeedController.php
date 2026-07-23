@@ -11,6 +11,7 @@ use common\exceptions\BizException;
 use common\models\User;
 use common\services\FeedService;
 use common\services\JwtService;
+use common\services\TipService;
 use Yii;
 
 /**
@@ -94,6 +95,17 @@ class FeedController extends ApiController
     public function actionShare(int $id): array
     {
         return (new FeedService())->share($this->currentUser()->getId(), $id);
+    }
+
+    /** POST /feeds/{id}/tip —— 打赏动态 { coin }，header Idempotency-Key 幂等 */
+    public function actionTip(int $id): array
+    {
+        $req = Yii::$app->request;
+        $tipNo = (string) $req->headers->get('Idempotency-Key', '');
+        if ($tipNo === '') {
+            $tipNo = 'T' . date('YmdHis') . bin2hex(random_bytes(8)); // 兜底：客户端未传
+        }
+        return (new TipService())->tip($this->currentUser()->getId(), $id, (int) $req->post('coin'), $tipNo);
     }
 
     /** GET /feeds/{id}/comments?page= —— 评论列表 */
