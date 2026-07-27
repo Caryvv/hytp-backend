@@ -92,6 +92,7 @@ return [
                 // 同袍币充值（Mock）
                 'POST wallet/recharge' => 'wallet/recharge',
                 'POST wallet/recharge/mock/confirm' => 'wallet/mock-confirm',
+                'POST wallet/withdraw' => 'wallet/withdraw',
                 // 任务系统（赚同袍币）
                 'GET tasks' => 'task/index',
                 'POST tasks/claim' => 'task/claim',

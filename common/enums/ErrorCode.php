@@ -59,6 +59,7 @@ class ErrorCode
     public const REFUND_STATUS_INVALID = 1305;     // 售后状态不允许该操作
     public const RECHARGE_AMOUNT_INVALID = 1310;   // 充值金额非法
     public const RECHARGE_ORDER_NOT_FOUND = 1311;  // 充值单不存在
+    public const WITHDRAW_AMOUNT_INVALID = 1312;   // 提现金额非法
 
     // 社交 1400-1499
     public const FEED_NOT_FOUND = 1401;         // 动态不存在
@@ -147,6 +148,7 @@ class ErrorCode
         self::REFUND_STATUS_INVALID => '售后状态不允许该操作',
         self::RECHARGE_AMOUNT_INVALID => '充值金额非法',
         self::RECHARGE_ORDER_NOT_FOUND => '充值单不存在',
+        self::WITHDRAW_AMOUNT_INVALID => '提现金额非法',
         self::UPLOAD_FAILED => '文件上传失败',
         self::UPLOAD_TYPE_INVALID => '不支持的文件类型',
         self::UPLOAD_SIZE_EXCEEDED => '文件大小超出限制',

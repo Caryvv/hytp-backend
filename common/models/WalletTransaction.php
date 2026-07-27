@@ -33,6 +33,7 @@ class WalletTransaction extends TradeActiveRecord
     public const TYPE_CONSUME = 3;     // 消费
     public const TYPE_REFUND = 4;      // 退款
     public const TYPE_GIFT = 5;        // 系统赠送
+    public const TYPE_WITHDRAW = 6;    // 提现（Mock 即时扣减）
 
     // 到账状态
     public const STATUS_PENDING = 0; // 待到账（真实通道下单未回调）

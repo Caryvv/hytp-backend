@@ -44,6 +44,13 @@ class WalletController extends ApiController
         return (new WalletService())->rechargeConfirm($this->currentUser()->getId(), $rechargeNo);
     }
 
+    /** POST /wallet/withdraw —— 提现 { coin } 同袍币 → Mock 即时扣减，余额不足抛 BALANCE_NOT_ENOUGH */
+    public function actionWithdraw(): array
+    {
+        $coin = (int) Yii::$app->request->post('coin', 0);
+        return (new WalletService())->withdraw($this->currentUser()->getId(), $coin);
+    }
+
     private function currentUser(): User
     {
         /** @var User|null $user */

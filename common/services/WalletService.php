@@ -187,6 +187,35 @@ class WalletService
         ];
     }
 
+    /**
+     * 提现（Mock：即时扣减到账）。复用 debit 乐观扣减，余额不足抛 BALANCE_NOT_ENOUGH。
+     * ponytail: Mock 即时扣减，与充值即时到账对称。真实通道需建提现单表 + 管理端审核 + 打款回调，
+     *           届时改为建 pending 提现单、审核通过后 debit 并回调。
+     *
+     * @return array{withdrawNo:string, coin:int, amountYuan:string, balanceCoin:int, mock:bool}
+     */
+    public function withdraw(int $userId, int $coin, int $channel = 0): array
+    {
+        if ($coin <= 0) {
+            throw new BizException(ErrorCode::WITHDRAW_AMOUNT_INVALID);
+        }
+        $withdrawNo = $this->genTxnNo();
+        $txn = $this->debit($userId, $coin, WalletTransaction::TYPE_WITHDRAW, [
+            'channel' => $channel,
+            'refType' => 'withdraw',
+            'refId' => $withdrawNo,
+            'remark' => 'Mock 提现',
+        ]);
+
+        return [
+            'withdrawNo' => $withdrawNo,
+            'coin' => $coin,
+            'amountYuan' => self::coinToYuan($coin),
+            'balanceCoin' => (int) $txn->balance_after,
+            'mock' => true,
+        ];
+    }
+
     /** 当前余额（同袍币）。 */
     public function currentCoin(int $userId): int
     {
