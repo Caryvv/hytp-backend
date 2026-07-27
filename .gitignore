@@ -22,6 +22,8 @@ Thumbs.db
 
 # composer vendor dir
 /vendor
+# 本地敏感配置：JWT/AI 等密钥，绝不入库
+**/config/params-local.php
 
 # composer itself is not needed
 composer.phar

@@ -63,7 +63,7 @@ class ReviewService
         $review->content = $content;
         $review->images = isset($in['images']) && is_array($in['images']) ? $in['images'] : [];
 
-        // 占位情感分析（后续 AI 阶段异步覆盖）
+        // 情感分析：先试 AI 微服务，失败/未启用回退规则版（doc 13 §7 降级，不阻断评价提交）
         [$sentiment, $keywords] = $this->analyze($rating, $content);
         $review->sentiment = $sentiment;
         $review->keywords = $keywords;
@@ -79,12 +79,27 @@ class ReviewService
     }
 
     /**
-     * 占位情感分析：按评分粗判情感，从内容里提取常见工艺关键词。
-     * 真实实现见 13 AI 文档，替换本方法即可。
+     * 情感分析：内容非空时先试 AI 微服务，失败/未启用回退规则版（doc 13 §5/§7）。
      *
      * @return array{0:int,1:array<int,string>}
      */
     private function analyze(int $rating, string $content): array
+    {
+        if (trim($content) !== '') {
+            $ai = (new AiSentimentService())->analyze([$content]);
+            if ($ai !== null && isset($ai[0])) {
+                return [$ai[0]['sentiment'], $ai[0]['keywords']];
+            }
+        }
+        return $this->analyzeByRule($rating, $content);
+    }
+
+    /**
+     * 规则版情感分析（AI 不可用时的降级）：按评分粗判情感，从内容提取常见工艺关键词。
+     *
+     * @return array{0:int,1:array<int,string>}
+     */
+    private function analyzeByRule(int $rating, string $content): array
     {
         $sentiment = $rating >= 4
             ? ProductReview::SENTIMENT_POSITIVE
