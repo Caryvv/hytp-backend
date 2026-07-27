@@ -73,6 +73,7 @@ return [
                 // 动态巡查（先发后审·下架/恢复）
                 'GET feeds' => 'feed/index',
                 'POST feeds/<id:\d+>/audit' => 'feed/audit',
+                'POST feeds/<id:\d+>/review' => 'feed/review',
                 // 操作日志
                 'GET logs' => 'log/index',
             ],

@@ -47,4 +47,23 @@ class FeedController extends AdminBaseController
         );
         return $result;
     }
+
+    /** POST /admin/feeds/{id}/review —— 待审动态审核 { pass:bool, remark? }（pass=true 通过，false 驳回下架） */
+    public function actionReview(int $id): array
+    {
+        $admin = $this->requirePermission(AdminRolePermission::PERM_FEED_AUDIT);
+        $req = Yii::$app->request;
+        $pass = (bool) $req->post('pass', false);
+        $remark = (string) $req->post('remark', '');
+
+        $result = (new AuditService())->auditFeed($id, $pass, $remark);
+
+        (new AdminLogService())->record(
+            $admin->getId(),
+            $pass ? 'feed.review.pass' : 'feed.review.reject',
+            'feed',
+            ['feedId' => $id, 'remark' => $remark],
+        );
+        return $result;
+    }
 }

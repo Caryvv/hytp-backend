@@ -74,6 +74,7 @@ class ErrorCode
     public const GROUP_FORBIDDEN = 1410;        // 无群操作权限
     public const TIP_SELF = 1411;               // 不能打赏自己的动态
     public const TIP_AMOUNT_INVALID = 1412;     // 打赏金额非法
+    public const CONTENT_SENSITIVE = 1413;      // 内容含敏感词
 
     // 文件上传 1306-1309
     public const UPLOAD_FAILED = 1306;
@@ -133,6 +134,7 @@ class ErrorCode
         self::GROUP_NOT_FOUND => '社群不存在',
         self::NOT_GROUP_MEMBER => '你不是该群成员',
         self::ALREADY_GROUP_MEMBER => '已加入该群',
+        self::CONTENT_SENSITIVE => '内容含敏感词，请修改后重试',
         self::GROUP_FORBIDDEN => '无该群操作权限',
         self::TIP_SELF => '不能打赏自己的动态',
         self::TIP_AMOUNT_INVALID => '打赏金额非法',

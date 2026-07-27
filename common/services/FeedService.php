@@ -43,7 +43,10 @@ class FeedService
         $feed->tags = isset($in['tags']) && is_array($in['tags']) ? $in['tags'] : [];
         $feed->product_ids = isset($in['productIds']) && is_array($in['productIds']) ? $in['productIds'] : [];
         $feed->city = (string) ($in['city'] ?? '');
-        $feed->status = Feed::STATUS_NORMAL;
+        // 敏感词命中 → 转待审进人工队列；否则先发后审直接正常
+        $feed->status = (new SensitiveWordService())->hasHit($content)
+            ? Feed::STATUS_AUDITING
+            : Feed::STATUS_NORMAL;
 
         $tx = Feed::getDb()->beginTransaction();
         try {
@@ -274,6 +277,10 @@ class FeedService
         $content = trim((string) ($in['content'] ?? ''));
         if ($content === '') {
             throw new BizException(ErrorCode::PARAM_INVALID, '评论内容不能为空');
+        }
+        // 评论无审核状态字段且高频，命中敏感词直接拒绝（不进队列）
+        if ((new SensitiveWordService())->hasHit($content)) {
+            throw new BizException(ErrorCode::CONTENT_SENSITIVE);
         }
         $parentId = isset($in['parentId']) && $in['parentId'] !== '' ? (int) $in['parentId'] : null;
         if ($parentId !== null) {

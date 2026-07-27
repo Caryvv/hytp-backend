@@ -242,4 +242,36 @@ class AuditService
         }
         return $feed->toAdminArray();
     }
+
+    /**
+     * 待审动态审核（敏感词命中转待审后的人工处置）。
+     *
+     * @param bool $pass true 通过（待审→正常），false 驳回（待审→下架，填理由）
+     */
+    public function auditFeed(int $feedId, bool $pass, string $remark = ''): array
+    {
+        $feed = Feed::findOne(['id' => $feedId]);
+        if ($feed === null) {
+            throw new BizException(ErrorCode::FEED_NOT_FOUND);
+        }
+        if ((int) $feed->status !== Feed::STATUS_AUDITING) {
+            throw new BizException(ErrorCode::FEED_STATUS_INVALID, '仅待审动态可审核');
+        }
+
+        if ($pass) {
+            $feed->status = Feed::STATUS_NORMAL;
+            $feed->off_reason = '';
+        } else {
+            if (trim($remark) === '') {
+                throw new BizException(ErrorCode::PARAM_INVALID, '驳回需填写理由');
+            }
+            $feed->status = Feed::STATUS_OFF;
+            $feed->off_reason = $remark;
+        }
+
+        if (!$feed->save(false)) {
+            throw new BizException(ErrorCode::INTERNAL_ERROR, '审核保存失败');
+        }
+        return $feed->toAdminArray();
+    }
 }
