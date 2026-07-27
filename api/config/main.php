@@ -98,6 +98,8 @@ return [
                 'POST tasks/claim' => 'task/claim',
                 // 文件上传
                 'POST upload' => 'upload/upload',
+                // AI 智能问答
+                'POST ai/qa' => 'ai/qa',
                 // 首页（免登录）
                 'GET home/banners' => 'home/banners',
                 'GET home/feed' => 'home/feed',
