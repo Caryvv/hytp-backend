@@ -1,0 +1,31 @@
+# 汉韵同袍 MySQL 8 调优（2C2G 单机，内存吃紧）。放 /etc/mysql/mysql.conf.d/hytp.cnf 后重启 mysql。
+# 目标：把 MySQL 常驻内存压到 ~450MB 内，给 PHP/Redis/Node 留空间。
+# 内存实在紧张时可换 MariaDB（同配置约省 100MB）。
+
+[mysqld]
+# InnoDB 缓冲池——最大内存项。2G 机器给 256M（默认 128M 偏小、8 版本自动可能吃到 1G+ 必须显式压）
+innodb_buffer_pool_size = 256M
+innodb_buffer_pool_instances = 1
+innodb_log_file_size = 64M
+innodb_flush_log_at_trx_commit = 2      # 略放宽持久性换性能，MVP 可接受（掉电最多丢 1s 事务）
+
+# 连接数——PHP max_children=6，留余量给命令行/迁移
+max_connections = 30
+thread_cache_size = 8
+
+# 关掉/压小吃内存的缓冲
+performance_schema = OFF                 # 省 ~200MB，代价是少了性能诊断表
+table_open_cache = 400
+tmp_table_size = 16M
+max_heap_table_size = 16M
+sort_buffer_size = 1M
+join_buffer_size = 1M
+
+# 字符集（表已 utf8mb4）
+character-set-server = utf8mb4
+collation-server = utf8mb4_unicode_ci
+
+# 慢查询日志（排查用，>1s 记录）
+slow_query_log = 1
+slow_query_log_file = /var/log/mysql/hytp-slow.log
+long_query_time = 1

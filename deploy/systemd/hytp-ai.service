@@ -1,0 +1,31 @@
+# 汉韵同袍 AI 微服务守护（DeepSeek 情感分析/问答）。放 /etc/systemd/system/hytp-ai.service
+# 用 systemd 而非 PM2：单服务无需再装全局 npm 进程管理器，systemd 自带重启/日志/开机自启。
+#
+# 部署：
+#   cd /var/www/hytp-web/ai && npm ci --omit=dev
+#   cp .env.example .env && 填入 DEEPSEEK_API_KEY / INTERNAL_SIGN_SECRET（与后端 params-local 的 ai.sign.secret 一致）
+#   chmod 600 .env
+#   systemctl daemon-reload && systemctl enable --now hytp-ai
+#   systemctl status hytp-ai / journalctl -u hytp-ai -f
+
+[Unit]
+Description=Hytp AI microservice (DeepSeek sentiment/qa)
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/hytp-web/ai
+# 只绑 127.0.0.1（server.ts 已 listen 8790；HMAC 内网调用，绝不对公网暴露）
+ExecStart=/usr/bin/node --env-file=.env --import tsx src/server.ts
+Restart=on-failure
+RestartSec=3
+# 内存护栏：AI 服务约 120MB，超 256MB 判定异常由 systemd 重启
+MemoryMax=256M
+# 日志走 journald
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
