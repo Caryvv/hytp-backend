@@ -98,6 +98,7 @@ return [
                 'POST tasks/claim' => 'task/claim',
                 // 文件上传
                 'POST upload' => 'upload/upload',
+                'GET upload/sts' => 'upload/sts-token',
                 // AI 智能问答
                 'POST ai/qa' => 'ai/qa',
                 // 首页（免登录）

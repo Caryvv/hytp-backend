@@ -32,11 +32,23 @@ return [
     'ai.sign.ttl' => 300,                              // 时间戳容差（秒）
 
     // 文件上传
-    'upload.driver' => 'local',            // local=本地存储, oss=阿里云OSS（预留）
+    'upload.driver' => 'local',            // local=本地存储, oss=阿里云OSS（预留服务器中转）
     'upload.baseUrl' => '',                // 文件访问基础 URL，留空用相对路径
-    // OSS 预留配置（driver=oss 时生效）
-    // 'upload.oss.accessKeyId' => '',
-    // 'upload.oss.accessKeySecret' => '',
-    // 'upload.oss.endpoint' => '',
-    // 'upload.oss.bucket' => '',
+
+    // OSS 客户端直传（STS 临时凭证）。upload.sts.enabled=false 时客户端回退服务器中转上传。
+    // 上线前在阿里云控制台准备：
+    //   ① 创建 OSS bucket（公读或配 CDN），开启 CORS（允许 PUT、来源 App 域/*、暴露 ETag）
+    //   ② 创建 RAM 角色，信任主账号；授权策略仅允许该 bucket 的 oss:PutObject
+    //   ③ 主账号 AccessKey（AK/SK 仅填 params-local，勿入库）
+    //   ④ 记录 roleArn（acs:ram::<账号id>:role/<角色名>）、region、bucket、ossEndpoint
+    'upload.sts.enabled' => false,                          // true 开启客户端直传
+    'upload.sts.region' => 'oss-cn-hangzhou',               // OSS 区域
+    'upload.sts.bucket' => '',                              // bucket 名
+    'upload.sts.ossEndpoint' => 'oss-cn-hangzhou.aliyuncs.com', // OSS 访问域名（客户端上传目标）
+    'upload.sts.endpoint' => 'https://sts.aliyuncs.com/',   // STS 服务端点
+    'upload.sts.roleArn' => '',                             // RAM 角色 ARN
+    'upload.sts.durationSeconds' => 900,                    // 临时凭证有效期（秒）
+    // AK/SK 在 params-local 覆盖，勿提交：
+    // 'upload.sts.accessKeyId' => '',
+    // 'upload.sts.accessKeySecret' => '',
 ];
