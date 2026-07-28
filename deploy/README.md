@@ -37,8 +37,9 @@ echo '/swapfile none swap sw 0 0' >> /etc/fstab
 apt update && apt install -y nginx mariadb-server redis-server \
   php8.4-fpm php8.4-mysql php8.4-redis php8.4-curl php8.4-mbstring php8.4-bcmath php8.4-gd \
   git unzip ca-certificates
-# 数据库初始化（MariaDB）
-mysql_secure_installation
+# 数据库初始化（Debian 13 MariaDB：命令是 mariadb-secure-installation，无 mysql_ 前缀符号链接）
+# root 默认 unix_socket 认证（用 sudo mariadb 进入），"设置 root 密码"可回车跳过，其余一路 Y
+mariadb-secure-installation
 # composer
 curl -sS https://getcomposer.org/installer | php && mv composer.phar /usr/local/bin/composer
 # node 20+（AI 服务需原生 --env-file / --import tsx）。Debian 13 源里 node 版本足够，或用 nodesource：
