@@ -75,6 +75,8 @@ return [
                 'POST orders/<orderNo:\d+>/confirm-return' => 'order/confirm-return',
                 'GET refunds' => 'order/refunds',
                 'POST refunds/<id:\d+>/handle' => 'order/handle-refund',
+                // 数据驾驶舱
+                'GET dashboard/review-keywords' => 'dashboard/review-keywords',
             ],
         ],
     ],
