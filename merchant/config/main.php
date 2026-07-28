@@ -77,6 +77,8 @@ return [
                 'POST refunds/<id:\d+>/handle' => 'order/handle-refund',
                 // 数据驾驶舱
                 'GET dashboard/review-keywords' => 'dashboard/review-keywords',
+                // 图片上传（OSS 直传临时凭证）
+                'GET upload/sts' => 'upload/sts-token',
             ],
         ],
     ],

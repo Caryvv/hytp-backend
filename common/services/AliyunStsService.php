@@ -36,15 +36,17 @@ class AliyunStsService
      *   enabled:bool, accessKeyId:string, accessKeySecret:string, securityToken:string,
      *   expiration:string, region:string, bucket:string, endpoint:string, dir:string
      * }
+     * @param int $id 主体 id（用户 id 或店铺 id，用于目录隔离与会话名）
+     * @param string $scope 命名空间前缀：app（用户端）/ shop（商家端）
      * @throws \RuntimeException STS 调用失败（控制器捕获后返 enabled=false 让客户端回退）
      */
-    public function assumeRole(int $userId): array
+    public function assumeRole(int $id, string $scope = 'app'): array
     {
         $p = Yii::$app->params;
         $region = (string) ($p['upload.sts.region'] ?? 'oss-cn-hangzhou');
         $bucket = (string) $p['upload.sts.bucket'];
-        // 用户目录前缀：app/{userId}/{YYYYMM}/，STS 权限也限制在此前缀，越权写不进去
-        $dir = 'app/' . $userId . '/' . date('Ym') . '/';
+        // 目录前缀：{scope}/{id}/{YYYYMM}/，STS 权限也限制在此前缀，越权写不进去
+        $dir = $scope . '/' . $id . '/' . date('Ym') . '/';
 
         $policy = json_encode([
             'Version' => '1',
@@ -58,7 +60,7 @@ class AliyunStsService
         $params = [
             'Action' => 'AssumeRole',
             'RoleArn' => (string) $p['upload.sts.roleArn'],
-            'RoleSessionName' => 'hytp-' . $userId,
+            'RoleSessionName' => 'hytp-' . $scope . '-' . $id,
             'DurationSeconds' => (string) ($p['upload.sts.durationSeconds'] ?? 900),
             'Policy' => (string) $policy,
             'Format' => 'JSON',
