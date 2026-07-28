@@ -7,24 +7,27 @@
 
 ## 组件与内存预算（2G 是硬约束）
 
-| 组件 | 常驻内存 | 配置文件 |
-|------|---------|---------|
-| 系统 / OS | ~250MB | — |
-| MariaDB 11.8（调优） | ~350–450MB | `mysql/hytp.cnf`（innodb 256M、关 performance_schema） |
-| Redis（封顶） | ~80MB | `redis/hytp.conf`（maxmemory 128M、纯缓存） |
-| PHP-FPM（6 worker） | ~270MB | `php/hytp-fpm.conf`（pm.max_children=6） |
-| Node AI 微服务 | ~120MB | `systemd/hytp-ai.service`（MemoryMax 256M） |
-| Nginx | ~30MB | `nginx/hytp.conf` |
-| **合计** | **~1.2GB** | 余 ~0.8GB |
+| 组件                 | 常驻内存         | 配置文件                                                 |
+| -------------------- | ---------------- | -------------------------------------------------------- |
+| 系统 / OS            | ~250MB           | —                                                       |
+| MariaDB 11.8（调优） | ~350–450MB      | `mysql/hytp.cnf`（innodb 256M、关 performance_schema） |
+| Redis（封顶）        | ~80MB            | `redis/hytp.conf`（maxmemory 128M、纯缓存）            |
+| PHP-FPM（6 worker）  | ~270MB           | `php/hytp-fpm.conf`（pm.max_children=6）               |
+| Node AI 微服务       | ~120MB           | `systemd/hytp-ai.service`（MemoryMax 256M）            |
+| Nginx                | ~30MB            | `nginx/hytp.conf`                                      |
+| **合计**       | **~1.2GB** | 余 ~0.8GB                                                |
 
 **必须挂 2GB swap** 兜底突发：
+
 ```bash
 fallocate -l 2G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
 echo '/swapfile none swap sw 0 0' >> /etc/fstab
 ```
+
 不用 Docker：2G 内存下原生装比容器省内存、少一层运维。
 
 ## 目录约定
+
 ```
 /var/www/hytp-backend/             ← PHP 后端（api/merchant/admin 三入口）
 /var/www/hytp-web/merchant/dist/   ← 商家端构建产物
@@ -35,10 +38,12 @@ echo '/swapfile none swap sw 0 0' >> /etc/fstab
 ## 部署步骤
 
 ### 1. 装依赖
+
 ```bash
 apt update && apt install -y nginx mariadb-server redis-server \
-  php8.4-fpm php8.4-mysql php8.4-redis php8.4-curl php8.4-mbstring php8.4-bcmath php8.4-gd \
+  php8.4-fpm php8.4-mysql php8.4-redis php8.4-curl php8.4-mbstring php8.4-bcmath php8.4-gd php8.4-xml \
   git unzip ca-certificates
+# php8.4-xml 提供 dom/simplexml（composer 解析依赖树时 codeception 等需要，缺了会卡）
 # composer
 curl -sS https://getcomposer.org/installer | php && mv composer.phar /usr/local/bin/composer
 # node 20+（AI 服务需原生 --env-file / --import tsx）
@@ -46,6 +51,7 @@ curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && apt install -y node
 ```
 
 数据库初始化（**命令是 `mariadb-secure-installation`，Debian 13 无 `mysql_` 前缀符号链接**）：
+
 ```bash
 mariadb-secure-installation
 # root 默认 unix_socket 认证（本机 sudo mariadb 直接进，不靠密码）——"设置 root 密码"可回车跳过，
@@ -60,6 +66,7 @@ cd /var/www/hytp-backend && composer install --no-dev --optimize-autoloader
 ```
 
 建库 + 建业务库账号（项目分 **3 个库**：hytp 主库 / hytp_trade 交易 / hytp_social 社交）：
+
 ```bash
 sudo mariadb <<'SQL'
 CREATE DATABASE IF NOT EXISTS hytp        DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -74,6 +81,7 @@ SQL
 ```
 
 先填 `common/config/main-local.php` 的三个 DB 连接（dsn/username/password，见 §4），再迁移：
+
 ```bash
 php yii migrate --interactive=0     # 主库 hytp
 # ★交易/社交库走各自 migrationPath 与 db 连接（对照 console 里的迁移分组，例如）：
@@ -84,15 +92,18 @@ php yii migrate --interactive=0     # 主库 hytp
 ```
 
 ### 3. 前端构建 + AI 服务依赖
+
 ```bash
 git clone <hytp-web> /var/www/hytp-web
 cd /var/www/hytp-web/merchant && npm ci && npm run build   # 产出 dist/
 cd /var/www/hytp-web/admin && npm ci && npm run build
 cd /var/www/hytp-web/ai && npm ci --omit=dev               # AI 服务运行依赖
 ```
+
 > 内存紧时前端可在本地构建后只把 `dist/` 传服务器，省掉服务器上装 devDependencies 的开销。
 
 ### 4. 配置文件就位
+
 ```bash
 cp deploy/nginx/hytp.conf   /etc/nginx/conf.d/hytp.conf         # 改域名、按需开管理端 IP 白名单
 cp deploy/php/hytp-fpm.conf /etc/php/8.4/fpm/pool.d/hytp.conf
@@ -102,6 +113,7 @@ cp deploy/systemd/hytp-ai.service /etc/systemd/system/
 ```
 
 ### 5. 填生产密钥（都在 gitignore 外，不入库）
+
 - `common/config/main-local.php`：三个库的 DB 连接（dsn 指向 hytp / hytp_trade / hytp_social）+ §2 建的账号密码
 - `common/config/params-local.php`：JWT 生产密钥、`ai.sign.secret`、`upload.sts.accessKeyId/Secret`
   ```bash
@@ -111,6 +123,7 @@ cp deploy/systemd/hytp-ai.service /etc/systemd/system/
 - `hytp-web/ai/.env`：`DEEPSEEK_API_KEY` + `INTERNAL_SIGN_SECRET`（须与 params-local 的 `ai.sign.secret` 完全一致）
 
 ### 6. 权限 + 启动
+
 ```bash
 chown -R www-data:www-data /var/www/hytp-backend /var/www/hytp-web
 chmod 600 /var/www/hytp-backend/common/config/params-local.php \
@@ -123,18 +136,21 @@ systemctl daemon-reload && systemctl enable --now hytp-ai
 ```
 
 ### 7. HTTPS（Let's Encrypt）
+
 ```bash
 apt install -y certbot python3-certbot-nginx
 certbot --nginx -d api.example.com -d merchant.example.com -d admin.example.com
 ```
 
 ### 8. 验证
+
 ```bash
 curl https://api.example.com/site/ping           # {"code":0,...,"db":true}
 curl -I https://merchant.example.com/            # 200 + index.html
 curl http://127.0.0.1:8790/health                # AI 服务 {"ok":true}
 systemctl status hytp-ai php8.4-fpm mariadb      # 均 active (running)
 ```
+
 Android 客户端把 baseUrl 改成 `https://api.example.com/`。
 
 ---
