@@ -1,6 +1,7 @@
 # 汉韵同袍 单机部署（2C2G / 40GB SSD / 3M 带宽）
 
-一台 Ubuntu 22.04+ 服务器跑全部服务。图片走 OSS 直传（不占本机磁盘/带宽），本机只跑 API 逻辑与小数据。
+目标系统 **Debian 13（trixie）**，一台服务器跑全部服务。图片走 OSS 直传（不占本机磁盘/带宽），本机只跑 API 逻辑与小数据。
+> Debian 13 差异（已在各配置适配）：默认 **PHP 8.4**、默认数据库 **MariaDB**（官方源无 MySQL）、FPM socket 用版本无关名 `/run/php/hytp-fpm.sock`。
 
 ## 组件与内存预算（2G 是硬约束）
 
@@ -33,12 +34,14 @@ echo '/swapfile none swap sw 0 0' >> /etc/fstab
 
 ### 1. 装依赖
 ```bash
-apt update && apt install -y nginx mysql-server redis-server \
-  php8.3-fpm php8.3-mysql php8.3-redis php8.3-curl php8.3-mbstring php8.3-bcmath php8.3-gd \
-  git unzip
+apt update && apt install -y nginx mariadb-server redis-server \
+  php8.4-fpm php8.4-mysql php8.4-redis php8.4-curl php8.4-mbstring php8.4-bcmath php8.4-gd \
+  git unzip ca-certificates
+# 数据库初始化（MariaDB）
+mysql_secure_installation
 # composer
 curl -sS https://getcomposer.org/installer | php && mv composer.phar /usr/local/bin/composer
-# node 20+（AI 服务需原生 --env-file）
+# node 20+（AI 服务需原生 --env-file / --import tsx）。Debian 13 源里 node 版本足够，或用 nodesource：
 curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && apt install -y nodejs
 ```
 
@@ -59,8 +62,8 @@ cd /var/www/hytp-web/ai && npm ci --omit=dev               # AI 服务运行依�
 ### 3. 配置文件就位
 ```bash
 cp deploy/nginx/hytp.conf   /etc/nginx/conf.d/hytp.conf      # 改域名、按需开管理端 IP 白名单
-cp deploy/php/hytp-fpm.conf /etc/php/8.3/fpm/pool.d/hytp.conf
-cp deploy/mysql/hytp.cnf    /etc/mysql/mysql.conf.d/hytp.cnf
+cp deploy/php/hytp-fpm.conf /etc/php/8.4/fpm/pool.d/hytp.conf
+cp deploy/mysql/hytp.cnf    /etc/mysql/mariadb.conf.d/hytp.cnf
 cat deploy/redis/hytp.conf  >> /etc/redis/redis.conf         # 或放 conf.d
 cp deploy/systemd/hytp-ai.service /etc/systemd/system/
 ```
@@ -82,7 +85,7 @@ chmod 600 /var/www/hytp-backend/common/config/params-local.php \
           /var/www/hytp-web/ai/.env
 mkdir -p /var/www/hytp-backend/api/web/uploads && chown www-data:www-data $_   # 中转上传兜底目录
 
-systemctl restart php8.3-fpm mysql redis-server nginx
+systemctl restart php8.4-fpm mariadb redis-server nginx
 systemctl daemon-reload && systemctl enable --now hytp-ai
 ```
 
