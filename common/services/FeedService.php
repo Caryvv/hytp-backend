@@ -74,7 +74,16 @@ class FeedService
     public function recommendFeed(int $userId, array $in): array
     {
         $query = Feed::find()->where(['status' => Feed::STATUS_NORMAL]);
-        return $this->paginate($userId, $query, $in);
+        // 热度加权（HN 风格重力衰减）：(互动加权 + 1) / (发布小时数 + 2)^1.5，同分再按 id 倒序。
+        // 权重 赞1/评论2/藏2/转发3/打赏4（打赏是真金白银，信号最强）；+1 基底让零互动新帖仍按新鲜度排。
+        // ponytail: 纯规则排序，不接 AI；协同过滤/个性化召回是后续 P1（doc 13 §4.2）。
+        // $now 为服务端整数，内联安全（无注入），省去 orderBy 中 Expression 参数绑定。
+        $now = time();
+        $order = new \yii\db\Expression(
+            "(like_count + comment_count * 2 + favorite_count * 2 + share_count * 3 + tip_count * 4 + 1)"
+            . " / POWER(($now - created_at) / 3600 + 2, 1.5) DESC, id DESC",
+        );
+        return $this->paginate($userId, $query, $in, $order);
     }
 
     /**
@@ -332,15 +341,16 @@ class FeedService
      *
      * @param \yii\db\ActiveQuery<Feed> $query
      * @param array<string,mixed> $in
+     * @param array<string,int>|\yii\db\Expression $orderBy 排序（默认 id 倒序）；推荐流传热度表达式。
      * @return array{list:array<int,array>, pagination:array{page:int,pageSize:int,total:int}}
      */
-    private function paginate(int $userId, \yii\db\ActiveQuery $query, array $in): array
+    private function paginate(int $userId, \yii\db\ActiveQuery $query, array $in, array|\yii\db\Expression $orderBy = ['id' => SORT_DESC]): array
     {
         $page = max(1, (int) ($in['page'] ?? 1));
         $pageSize = min(50, max(1, (int) ($in['pageSize'] ?? 20)));
 
         $total = (int) $query->count();
-        $rows = $query->orderBy(['id' => SORT_DESC])
+        $rows = $query->orderBy($orderBy)
             ->offset(($page - 1) * $pageSize)
             ->limit($pageSize)
             ->all();
