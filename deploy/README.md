@@ -1,3 +1,7 @@
+
+
+zhang
+
 # 汉韵同袍 单机部署（2C2G / 40GB SSD / 3M 带宽）
 
 目标系统 **Debian 13（trixie）**，一台服务器跑全部服务。图片走 OSS 直传（不占本机磁盘/带宽），本机只跑 API 逻辑与小数据。
@@ -61,7 +65,7 @@ mariadb-secure-installation
 ### 2. 拉代码 + 建库 + 迁移
 
 ```bash
-git clone <hytp-backend> /var/www/hytp-backend
+git clone https://github.com/Caryvv/hytp-backend.git /var/www/hytp-backend
 cd /var/www/hytp-backend && composer install --no-dev --optimize-autoloader
 ```
 
@@ -70,14 +74,20 @@ cd /var/www/hytp-backend && composer install --no-dev --optimize-autoloader
 ```bash
 sudo mariadb <<'SQL'
 CREATE DATABASE IF NOT EXISTS hytp        DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS hytp_shop   DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE DATABASE IF NOT EXISTS hytp_trade  DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS hytp_admin  DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE DATABASE IF NOT EXISTS hytp_social DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER IF NOT EXISTS 'hytp'@'localhost' IDENTIFIED BY '换成强密码';
+CREATE USER IF NOT EXISTS 'hytp'@'localhost' IDENTIFIED BY 'dfbr2J#auMFmk!B';
 GRANT ALL PRIVILEGES ON hytp.*        TO 'hytp'@'localhost';
+GRANT ALL PRIVILEGES ON hytp_shop.*   TO 'hytp'@'localhost';
 GRANT ALL PRIVILEGES ON hytp_trade.*  TO 'hytp'@'localhost';
+GRANT ALL PRIVILEGES ON hytp_admin.*  TO 'hytp'@'localhost';
 GRANT ALL PRIVILEGES ON hytp_social.* TO 'hytp'@'localhost';
 FLUSH PRIVILEGES;
 SQL
+
+sed -i "s/hytp_faa63efcb0d82bb1/dfbr2J#auMFmk!B/g" /var/www/hytp-backend/common/config/main-local.php
 ```
 
 先填 `common/config/main-local.php` 的三个 DB 连接（dsn/username/password，见 §4），再迁移：
@@ -94,7 +104,7 @@ php yii migrate --interactive=0     # 主库 hytp
 ### 3. 前端构建 + AI 服务依赖
 
 ```bash
-git clone <hytp-web> /var/www/hytp-web
+git clone https://github.com/Caryvv/hytp-web.git /var/www/hytp-web
 cd /var/www/hytp-web/merchant && npm ci && npm run build   # 产出 dist/
 cd /var/www/hytp-web/admin && npm ci && npm run build
 cd /var/www/hytp-web/ai && npm ci --omit=dev               # AI 服务运行依赖
@@ -105,11 +115,13 @@ cd /var/www/hytp-web/ai && npm ci --omit=dev               # AI 服务运行依�
 ### 4. 配置文件就位
 
 ```bash
-cp deploy/nginx/hytp.conf   /etc/nginx/conf.d/hytp.conf         # 改域名、按需开管理端 IP 白名单
-cp deploy/php/hytp-fpm.conf /etc/php/8.4/fpm/pool.d/hytp.conf
-cp deploy/mysql/hytp.cnf    /etc/mysql/mariadb.conf.d/hytp.cnf
-cat deploy/redis/hytp.conf  >> /etc/redis/redis.conf            # 或放 /etc/redis/redis.conf.d/
-cp deploy/systemd/hytp-ai.service /etc/systemd/system/
+cp /var/www/hytp-backend/deploy/nginx/hytp.conf   /etc/nginx/conf.d/hytp.conf         # 改域名、按需开管理端 IP 白名单
+cp /var/www/hytp-backend/deploy/php/hytp-fpm.conf /etc/php/8.4/fpm/pool.d/hytp.conf
+cp /var/www/hytp-backend/deploy/mysql/hytp.cnf    /etc/mysql/mariadb.conf.d/hytp.cnf
+cat /var/www/hytp-backend/deploy/redis/hytp.conf  >> /etc/redis/redis.conf            # 或放 /etc/redis/redis.conf.d/
+cp /var/www/hytp-backend/deploy/systemd/hytp-ai.service /etc/systemd/system/
+
+nginx -t && systemctl reload nginx
 ```
 
 ### 5. 填生产密钥（都在 gitignore 外，不入库）
