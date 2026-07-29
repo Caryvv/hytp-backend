@@ -41,14 +41,14 @@ return [
     //   ② 创建 RAM 角色，信任主账号；授权策略仅允许该 bucket 的 oss:PutObject
     //   ③ 主账号 AccessKey（AK/SK 仅填 params-local，勿入库）
     //   ④ 记录 roleArn（acs:ram::<账号id>:role/<角色名>）、region、bucket、ossEndpoint
-    'upload.sts.enabled' => false,                          // true 开启客户端直传
-    'upload.sts.region' => 'oss-cn-hangzhou',               // OSS 区域
-    'upload.sts.bucket' => '',                              // bucket 名
-    'upload.sts.ossEndpoint' => 'oss-cn-hangzhou.aliyuncs.com', // OSS 访问域名（客户端上传目标）
+    'upload.sts.enabled' => true,                          // true 开启客户端直传
+    'upload.sts.region' => 'oss-cn-shanghai',               // OSS 区域
+    'upload.sts.bucket' => 'oss-cn-shangha',                              // bucket 名
+    'upload.sts.ossEndpoint' => 'oss-cn-shanghai.aliyuncs.com', // OSS 访问域名（客户端上传目标）
     'upload.sts.endpoint' => 'https://sts.aliyuncs.com/',   // STS 服务端点
-    'upload.sts.roleArn' => '',                             // RAM 角色 ARN
+    'upload.sts.roleArn' => 'acs:ram::1386042690219152:role/hytp',                             // RAM 角色 ARN
     'upload.sts.durationSeconds' => 900,                    // 临时凭证有效期（秒）
     // AK/SK 在 params-local 覆盖，勿提交：
-    // 'upload.sts.accessKeyId' => '',
-    // 'upload.sts.accessKeySecret' => '',
+    'upload.sts.accessKeyId' => '',
+    'upload.sts.accessKeySecret' => '',
 ];
