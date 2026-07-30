@@ -74,6 +74,13 @@ return [
                 'GET feeds' => 'feed/index',
                 'POST feeds/<id:\d+>/audit' => 'feed/audit',
                 'POST feeds/<id:\d+>/review' => 'feed/review',
+                // 商家处罚（扣分/封禁/解封 + 信用流水）
+                'GET shops/<id:\d+>/credit-logs' => 'penalty/credit-logs',
+                'POST shops/<id:\d+>/penalty' => 'penalty/penalty',
+                // 平台配置
+                'GET configs' => 'config/index',
+                'PUT configs/<key:[\w.:-]+>' => 'config/save',
+                'DELETE configs/<key:[\w.:-]+>' => 'config/remove',
                 // 操作日志
                 'GET logs' => 'log/index',
             ],
