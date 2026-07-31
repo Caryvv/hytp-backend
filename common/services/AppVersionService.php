@@ -102,7 +102,42 @@ class AppVersionService
 
     public function delete(int $id): void
     {
-        $this->find($id)->delete();
+        $v = $this->find($id);
+        // 删库前先尝试删磁盘 APK 文件（孤儿文件清理）
+        $this->deleteApkFile($v->download_url);
+        $v->delete();
+    }
+
+    /**
+     * 根据 download_url 删除 downloads 目录下的 APK 文件。
+     * 安全：只删 @api/web/downloads/ 下的 .apk 文件，外部 URL / 路径穿越一律跳过。
+     * 删除失败静默（文件可能已被手动删/权限问题），不影响数据库删除。
+     */
+    private function deleteApkFile(string $url): void
+    {
+        if ($url === '') {
+            return;
+        }
+        // 解析出纯文件名（/downloads/xxx.apk → xxx.apk；http://domain/downloads/xxx.apk → xxx.apk）
+        $path = parse_url($url, PHP_URL_PATH);
+        if ($path === null || $path === false) {
+            return;
+        }
+        $name = basename($path);
+        // 仅处理 .apk 后缀（防误删）
+        if (!str_ends_with($name, '.apk')) {
+            return;
+        }
+        $downloadsDir = \Yii::getAlias('@api/web/downloads');
+        $file = $downloadsDir . '/' . $name;
+        // 二次确认在 downloads 目录下（防路径穿越）
+        if (strpos(realpath($file) ?: $file, realpath($downloadsDir)) !== 0) {
+            return;
+        }
+        if (is_file($file)) {
+            @unlink($file);
+            \Yii::info("Deleted APK file: {$file}", __METHOD__);
+        }
     }
 
     private function find(int $id): AppVersion
