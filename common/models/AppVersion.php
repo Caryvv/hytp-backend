@@ -67,4 +67,22 @@ class AppVersion extends ActiveRecord
             'forceUpdate' => $forceUpdate,
         ];
     }
+
+    /** 管理端列表（全字段）。 */
+    public function toAdminArray(): array
+    {
+        return [
+            'id' => (int) $this->id,
+            'platform' => $this->platform,
+            'versionCode' => (int) $this->version_code,
+            'versionName' => $this->version_name,
+            'updateLog' => (string) ($this->update_log ?? ''),
+            'downloadUrl' => $this->download_url,
+            'forceUpdate' => (int) $this->force_update === 1,
+            'minSupportedCode' => (int) $this->min_supported_code,
+            'enabled' => (int) $this->enabled === 1,
+            'createdAt' => (int) $this->created_at,
+            'updatedAt' => (int) $this->updated_at,
+        ];
+    }
 }

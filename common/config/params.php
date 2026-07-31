@@ -35,6 +35,10 @@ return [
     'upload.driver' => 'local',            // local=本地存储, oss=阿里云OSS（预留服务器中转）
     'upload.baseUrl' => '',                // 文件访问基础 URL，留空用相对路径
 
+    // App APK 下载基础 URL（合并分片后拼下载地址）。指向 api 站点的 /downloads/ 目录。
+    // 内测：http://124.220.15.182/downloads ；上 HTTPS/域名后改这里即可。留空则用相对 /downloads/。
+    'app.apkBaseUrl' => 'http://124.220.15.182/downloads',
+
     // OSS 客户端直传（STS 临时凭证）。upload.sts.enabled=false 时客户端回退服务器中转上传。
     // 上线前在阿里云控制台准备：
     //   ① 创建 OSS bucket（公读或配 CDN），开启 CORS（允许 PUT、来源 App 域/*、暴露 ETag）

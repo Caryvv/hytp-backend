@@ -81,6 +81,14 @@ return [
                 'GET configs' => 'config/index',
                 'PUT configs/<key:[\w.:-]+>' => 'config/save',
                 'DELETE configs/<key:[\w.:-]+>' => 'config/remove',
+                // App 版本管理（APK 分片上传 + 版本 CRUD）
+                'GET app-versions' => 'app-version/index',
+                'POST app-versions/chunk' => 'app-version/chunk',
+                'POST app-versions/merge' => 'app-version/merge',
+                'POST app-versions' => 'app-version/create',
+                'PUT app-versions/<id:\d+>' => 'app-version/update',
+                'POST app-versions/<id:\d+>/toggle' => 'app-version/toggle',
+                'DELETE app-versions/<id:\d+>' => 'app-version/delete',
                 // 操作日志
                 'GET logs' => 'log/index',
             ],
