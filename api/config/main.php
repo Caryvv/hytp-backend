@@ -104,6 +104,8 @@ return [
                 // 首页（免登录）
                 'GET home/banners' => 'home/banners',
                 'GET home/feed' => 'home/feed',
+                // 应用内更新检查（免登录）
+                'GET app/version/check' => 'app-version/check',
                 // 社交（阶段4 P0，均需登录）
                 'GET feeds' => 'feed/index',
                 'POST feeds' => 'feed/create',
