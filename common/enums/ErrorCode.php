@@ -82,8 +82,12 @@ class ErrorCode
     public const UPLOAD_SIZE_EXCEEDED = 1308;
     public const BALANCE_NOT_ENOUGH = 1309;
 
-    // 文旅 1500-1599
-    // 文化/内容 1600-1699
+    // 文旅 1500-1599 / 文化/内容 1600-1699（合并一张 content 表，共用 1500 段）
+    public const CONTENT_NOT_FOUND = 1501;       // 内容不存在
+    public const CONTENT_STATUS_INVALID = 1502;  // 内容状态不允许该操作
+    public const SIGNUP_ALREADY_EXISTS = 1503;   // 已报名
+    public const SIGNUP_CLOSED = 1504;           // 报名已截止/名额已满
+
     // 商家端 1700-1799
     public const SHOP_NOT_AUDITED = 1701;
     public const SHOP_NOT_FOUND = 1702;            // 商家不存在
@@ -160,6 +164,10 @@ class ErrorCode
         self::SHOP_STATUS_INVALID => '商家状态不允许该操作',
         self::SHOP_ACCOUNT_EXISTS => '商家账号已存在',
         self::ADMIN_NO_PERMISSION => '无该操作权限',
+        self::CONTENT_NOT_FOUND => '内容不存在',
+        self::CONTENT_STATUS_INVALID => '内容状态不允许该操作',
+        self::SIGNUP_ALREADY_EXISTS => '你已报名',
+        self::SIGNUP_CLOSED => '报名已截止或名额已满',
         self::AI_UNAVAILABLE => 'AI 服务暂不可用',
         self::INTERNAL_ERROR => '服务器内部错误',
     ];

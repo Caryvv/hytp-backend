@@ -89,6 +89,12 @@ return [
                 'PUT app-versions/<id:\d+>' => 'app-version/update',
                 'POST app-versions/<id:\d+>/toggle' => 'app-version/toggle',
                 'DELETE app-versions/<id:\d+>' => 'app-version/delete',
+                // 文旅+文化内容录入（content:manage）
+                'GET contents' => 'content/index',
+                'POST contents' => 'content/create',
+                'PUT contents/<id:\d+>' => 'content/update',
+                'POST contents/<id:\d+>/toggle' => 'content/toggle',
+                'DELETE contents/<id:\d+>' => 'content/delete',
                 // 操作日志
                 'GET logs' => 'log/index',
             ],

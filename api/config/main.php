@@ -104,6 +104,15 @@ return [
                 // 首页（免登录）
                 'GET home/banners' => 'home/banners',
                 'GET home/feed' => 'home/feed',
+                // 文旅+文化内容（列表/详情免登录可浏览，互动需登录）
+                'GET contents' => 'content/index',
+                'GET contents/<id:\d+>' => 'content/view',
+                'POST contents/<id:\d+>/like' => 'content/like',
+                'POST contents/<id:\d+>/unlike' => 'content/unlike',
+                'POST contents/<id:\d+>/favorite' => 'content/favorite',
+                'POST contents/<id:\d+>/unfavorite' => 'content/unfavorite',
+                'POST contents/<id:\d+>/signup' => 'content/signup',
+                'POST contents/<id:\d+>/cancel-signup' => 'content/cancel-signup',
                 // 应用内更新检查（免登录）
                 'GET app/version/check' => 'app-version/check',
                 // 社交（阶段4 P0，均需登录）
