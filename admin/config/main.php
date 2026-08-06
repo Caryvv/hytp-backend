@@ -89,6 +89,8 @@ return [
                 'PUT app-versions/<id:\d+>' => 'app-version/update',
                 'POST app-versions/<id:\d+>/toggle' => 'app-version/toggle',
                 'DELETE app-versions/<id:\d+>' => 'app-version/delete',
+                // 文件上传 OSS 直传凭证（content:manage）
+                'GET upload/sts' => 'upload/sts-token',
                 // 文旅+文化内容录入（content:manage）
                 'GET contents' => 'content/index',
                 'POST contents' => 'content/create',
