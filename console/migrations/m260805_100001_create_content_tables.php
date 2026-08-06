@@ -17,7 +17,9 @@ class m260805_100001_create_content_tables extends Migration
     {
         /** @var \yii\db\Connection $social */
         $social = Yii::$app->get('dbSocial');
-        $opt = 'CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci ENGINE=InnoDB';
+        // COLLATE 不硬编码：MySQL8 用 utf8mb4_0900_ai_ci、MariaDB 用自身默认，二者对该值不兼容。
+        // 只指定 charset，排序规则继承各库默认，dev(MySQL8)/prod(MariaDB) 各自内部一致。
+        $opt = 'CHARACTER SET utf8mb4 ENGINE=InnoDB';
 
         // 内容主表（文旅 type=1 / 文化传承 type=2）
         $social->createCommand()->createTable('{{%content}}', [
