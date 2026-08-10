@@ -101,6 +101,13 @@ return [
                 'GET upload/sts' => 'upload/sts-token',
                 // AI 智能问答
                 'POST ai/qa' => 'ai/qa',
+                // AI 试衣（提交→轮询；可复用形象）
+                'POST tryon/submit' => 'tryon/submit',
+                'GET tryon/tasks' => 'tryon/my-tasks',
+                'GET tryon/tasks/<id:\d+>' => 'tryon/poll',
+                'GET tryon/avatars' => 'tryon/avatars',
+                'POST tryon/avatars' => 'tryon/add-avatar',
+                'DELETE tryon/avatars/<id:\d+>' => 'tryon/delete-avatar',
                 // 首页（免登录）
                 'GET home/banners' => 'home/banners',
                 'GET home/feed' => 'home/feed',

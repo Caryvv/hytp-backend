@@ -97,6 +97,9 @@ class ErrorCode
 
     // AI 1800-1899
     public const AI_UNAVAILABLE = 1801;
+    public const TRYON_TASK_NOT_FOUND = 1802;  // 试衣任务不存在
+    public const TRYON_IMAGE_INVALID = 1803;   // 试衣人物图/服装图非法
+    public const TRYON_FAILED = 1804;          // 试衣生成失败
 
     // 服务端内部
     public const INTERNAL_ERROR = 5000;
@@ -169,6 +172,9 @@ class ErrorCode
         self::SIGNUP_ALREADY_EXISTS => '你已报名',
         self::SIGNUP_CLOSED => '报名已截止或名额已满',
         self::AI_UNAVAILABLE => 'AI 服务暂不可用',
+        self::TRYON_TASK_NOT_FOUND => '试衣任务不存在',
+        self::TRYON_IMAGE_INVALID => '请提供有效的人物照和服装图',
+        self::TRYON_FAILED => 'AI 试衣生成失败，请重试',
         self::INTERNAL_ERROR => '服务器内部错误',
     ];
 
