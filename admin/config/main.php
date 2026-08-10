@@ -96,6 +96,7 @@ return [
                 'POST contents' => 'content/create',
                 'PUT contents/<id:\d+>' => 'content/update',
                 'POST contents/<id:\d+>/toggle' => 'content/toggle',
+                'GET contents/<id:\d+>/signups' => 'content/signups',
                 'DELETE contents/<id:\d+>' => 'content/delete',
                 // 操作日志
                 'GET logs' => 'log/index',

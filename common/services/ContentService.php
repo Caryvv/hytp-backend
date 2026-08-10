@@ -251,6 +251,31 @@ class ContentService
     }
 
     /**
+     * 某内容的报名名单（默认只列报名中，分页）。
+     *
+     * @param array<string,mixed> $in page, pageSize
+     * @return array{list:array<int,array>, pagination:array{page:int,pageSize:int,total:int}}
+     */
+    public function signupList(int $contentId, array $in): array
+    {
+        $page = max(1, (int) ($in['page'] ?? 1));
+        $pageSize = min(50, max(1, (int) ($in['pageSize'] ?? 20)));
+
+        $query = ContentSignup::find()
+            ->where(['content_id' => $contentId, 'status' => ContentSignup::STATUS_ACTIVE]);
+        $total = (int) $query->count();
+        $rows = $query->orderBy(['id' => SORT_DESC])
+            ->offset(($page - 1) * $pageSize)
+            ->limit($pageSize)
+            ->all();
+
+        return [
+            'list' => array_map(static fn (ContentSignup $s): array => $s->toArray(), $rows),
+            'pagination' => ['page' => $page, 'pageSize' => $pageSize, 'total' => $total],
+        ];
+    }
+
+    /**
      * 新建内容。
      *
      * @param array<string,mixed> $in

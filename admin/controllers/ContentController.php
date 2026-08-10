@@ -65,6 +65,17 @@ class ContentController extends AdminBaseController
         return $result;
     }
 
+    /** GET /admin/contents/{id}/signups?page=&pageSize= —— 某内容的报名名单 */
+    public function actionSignups(int $id): array
+    {
+        $this->requirePermission(AdminRolePermission::PERM_CONTENT_MANAGE);
+        $req = Yii::$app->request;
+        return (new ContentService())->signupList($id, [
+            'page' => $req->get('page'),
+            'pageSize' => $req->get('pageSize'),
+        ]);
+    }
+
     /**
      * 读取写操作 body 白名单。
      *
