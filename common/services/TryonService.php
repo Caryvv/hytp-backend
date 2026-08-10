@@ -80,7 +80,7 @@ class TryonService
             case 'UNKNOWN':   // 作业不存在/状态未知，按失败处理，别让前端白轮到超时
             case 'CANCELED':
                 $task->status = TryonTask::STATUS_FAILED;
-                $task->fail_reason = 'AI 生成失败';
+                $task->fail_reason = $this->failMessage($r['failReason']);
                 $task->save(false);
                 break;
             // PENDING / PRE-PROCESSING / RUNNING / POST-PROCESSING：保持处理中，前端继续轮询
@@ -167,5 +167,20 @@ class TryonService
             throw new BizException(ErrorCode::FORBIDDEN);
         }
         return $task;
+    }
+
+    /**
+     * 阿里云试衣失败错误码 → 用户可读的中文提示。未知码给通用兜底。
+     */
+    private function failMessage(string $code): string
+    {
+        return match ($code) {
+            'InvalidPerson' => '照片里没有完整的人或有多个人，请换一张单人全身照',
+            'InvalidGarment' => '服装图不合规，请联系商家更换试穿素材',
+            'InvalidURL' => '图片无法访问，请重试',
+            'InvalidInputLength' => '照片尺寸或大小不符合要求，请换一张（边长 150~4096、5KB~5MB）',
+            'InvalidParameter' => '试衣参数有误，请重试',
+            default => 'AI 生成失败，请重试',
+        };
     }
 }

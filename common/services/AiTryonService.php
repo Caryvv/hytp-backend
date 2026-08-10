@@ -36,7 +36,7 @@ class AiTryonService
     /**
      * 查询试衣任务；成功时 imageUrl 为已转存自有 OSS 的永久 URL。
      *
-     * @return array{status:string, imageUrl:string}
+     * @return array{status:string, imageUrl:string, failReason:string}
      * @throws BizException
      */
     public function query(string $taskId): array
@@ -45,6 +45,7 @@ class AiTryonService
         return [
             'status' => (string) ($data['status'] ?? 'PENDING'),
             'imageUrl' => (string) ($data['imageUrl'] ?? ''),
+            'failReason' => (string) ($data['failReason'] ?? ''),
         ];
     }
 
