@@ -77,11 +77,13 @@ class TryonService
                 $task->save(false);
                 break;
             case 'FAILED':
+            case 'UNKNOWN':   // 作业不存在/状态未知，按失败处理，别让前端白轮到超时
+            case 'CANCELED':
                 $task->status = TryonTask::STATUS_FAILED;
                 $task->fail_reason = 'AI 生成失败';
                 $task->save(false);
                 break;
-            // PENDING / RUNNING：保持处理中，前端继续轮询
+            // PENDING / PRE-PROCESSING / RUNNING / POST-PROCESSING：保持处理中，前端继续轮询
         }
         return $task->toArray();
     }
