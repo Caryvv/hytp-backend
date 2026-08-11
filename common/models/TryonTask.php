@@ -66,8 +66,10 @@ class TryonTask extends SocialActiveRecord
             'personUrl' => $this->person_url,
             'garmentUrl' => $this->garment_url,
             'status' => (int) $this->status,
-            'resultUrl' => $this->result_url,
-            'failReason' => $this->fail_reason,
+            // (string) 强转：create 后对象内存里这俩仍是 null（default '' 不回填），
+            // 不转会以 null 下发击穿 App 端非空 String 的 Moshi 解析
+            'resultUrl' => (string) $this->result_url,
+            'failReason' => (string) $this->fail_reason,
             'createdAt' => (int) $this->created_at,
         ];
     }
