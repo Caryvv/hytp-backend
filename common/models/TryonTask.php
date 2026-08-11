@@ -19,6 +19,7 @@ use common\base\SocialActiveRecord;
  * @property int $status 0处理中 1成功 2失败
  * @property string $result_url
  * @property string $fail_reason
+ * @property int $deleted 0正常 1已删(软删)
  * @property int $created_at
  * @property int $updated_at
  */
@@ -50,6 +51,8 @@ class TryonTask extends SocialActiveRecord
             [['fail_reason'], 'string', 'max' => 255],
             [['status'], 'in', 'range' => [self::STATUS_PENDING, self::STATUS_SUCCESS, self::STATUS_FAILED]],
             [['status'], 'default', 'value' => self::STATUS_PENDING],
+            [['deleted'], 'integer'],
+            [['deleted'], 'default', 'value' => 0],
         ];
     }
 

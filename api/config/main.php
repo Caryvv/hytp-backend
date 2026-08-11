@@ -105,6 +105,7 @@ return [
                 'POST tryon/submit' => 'tryon/submit',
                 'GET tryon/tasks' => 'tryon/my-tasks',
                 'GET tryon/tasks/<id:\d+>' => 'tryon/poll',
+                'DELETE tryon/tasks/<id:\d+>' => 'tryon/delete-task',
                 'GET tryon/avatars' => 'tryon/avatars',
                 'POST tryon/avatars' => 'tryon/add-avatar',
                 'DELETE tryon/avatars/<id:\d+>' => 'tryon/delete-avatar',

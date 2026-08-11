@@ -99,7 +99,7 @@ class TryonService
         $page = max(1, (int) ($in['page'] ?? 1));
         $pageSize = min(50, max(1, (int) ($in['pageSize'] ?? 20)));
 
-        $query = TryonTask::find()->where(['user_id' => $userId]);
+        $query = TryonTask::find()->where(['user_id' => $userId, 'deleted' => 0]);
         $total = (int) $query->count();
         $rows = $query->orderBy(['id' => SORT_DESC])
             ->offset(($page - 1) * $pageSize)
@@ -110,6 +110,17 @@ class TryonService
             'list' => array_map(static fn (TryonTask $t): array => $t->toArray(), $rows),
             'pagination' => ['page' => $page, 'pageSize' => $pageSize, 'total' => $total],
         ];
+    }
+
+    /** 软删除自己的试衣记录（置 deleted=1，幂等）。 */
+    public function deleteTask(int $userId, int $taskId): array
+    {
+        $task = $this->ownedTask($userId, $taskId);
+        if ((int) $task->deleted !== 1) {
+            $task->deleted = 1;
+            $task->save(false);
+        }
+        return ['id' => $taskId];
     }
 
     // ---------------- 可复用形象 ----------------

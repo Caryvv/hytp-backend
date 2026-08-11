@@ -56,6 +56,12 @@ class TryonController extends ApiController
         ]);
     }
 
+    /** DELETE /tryon/tasks/{id} —— 软删除我的试衣记录 */
+    public function actionDeleteTask(int $id): array
+    {
+        return (new TryonService())->deleteTask($this->currentUser()->getId(), $id);
+    }
+
     /** GET /tryon/avatars —— 我的可复用形象列表 */
     public function actionAvatars(): array
     {
