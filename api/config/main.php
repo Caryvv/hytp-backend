@@ -103,6 +103,7 @@ return [
                 'POST ai/qa' => 'ai/qa',
                 // AI 试衣（提交→轮询；可复用形象）
                 'POST tryon/submit' => 'tryon/submit',
+                'GET tryon/quota' => 'tryon/quota',
                 'GET tryon/tasks' => 'tryon/my-tasks',
                 'GET tryon/tasks/<id:\d+>' => 'tryon/poll',
                 'DELETE tryon/tasks/<id:\d+>' => 'tryon/delete-task',

@@ -8,7 +8,9 @@ use common\enums\ErrorCode;
 use common\exceptions\BizException;
 use common\models\Product;
 use common\models\TryonTask;
+use common\models\User;
 use common\models\UserAvatar;
+use common\models\WalletTransaction;
 
 /**
  * AI 试衣业务：提交任务、轮询结果、我的试衣历史、可复用形象管理。
@@ -16,6 +18,12 @@ use common\models\UserAvatar;
  */
 class TryonService
 {
+    // 每日免费试衣次数与超额单价（同袍币）。普通用户 vs 有效会员两档。
+    private const FREE_QUOTA_NORMAL = 3;
+    private const FREE_QUOTA_PREMIUM = 5;
+    private const PRICE_NORMAL = 10;
+    private const PRICE_PREMIUM = 8;
+
     /**
      * 提交试衣任务。服装图取商品的 tryon_model_url（商家专挂），无则不可试穿。
      *
@@ -37,19 +45,94 @@ class TryonService
             throw new BizException(ErrorCode::TRYON_IMAGE_INVALID, '该商品暂不支持试穿');
         }
 
-        $aliyunTaskId = (new AiTryonService())->submit($personUrl, $garmentUrl);
+        // 计费：有效会员每日免费 5 次、超额 8 币；普通用户 3 次、超额 10 币。
+        ['freeQuota' => $freeQuota, 'price' => $price] = $this->pricing($userId);
 
-        $task = new TryonTask();
-        $task->user_id = $userId;
-        $task->product_id = $productId;
-        $task->person_url = $personUrl;
-        $task->garment_url = $garmentUrl;
-        $task->aliyun_task_id = $aliyunTaskId;
-        $task->status = TryonTask::STATUS_PENDING;
-        if (!$task->save()) {
-            throw new BizException(ErrorCode::TRYON_FAILED);
+        // 今日已用次数含软删记录，否则删历史即可刷新免费额度白嫖
+        // ponytail: count→debit 非原子，并发提交可能多蹭 1~2 次免费；debit 本身原子（不会扣负），
+        //           App 单次提交场景价值低，不上行锁。要严格额度再对 user 加锁或唯一约束。
+        $needCharge = $this->todayCount($userId) >= $freeQuota;
+
+        $wallet = new WalletService();
+        $charged = false;
+        if ($needCharge) {
+            // 先扣币：余额不足在调阿里云前就抛 BALANCE_NOT_ENOUGH，不浪费一次 API 调用
+            $wallet->debit($userId, $price, WalletTransaction::TYPE_CONSUME, [
+                'refType' => 'tryon',
+                'remark' => 'AI 试衣超额',
+            ]);
+            $charged = true;
+        }
+
+        try {
+            $aliyunTaskId = (new AiTryonService())->submit($personUrl, $garmentUrl);
+
+            $task = new TryonTask();
+            $task->user_id = $userId;
+            $task->product_id = $productId;
+            $task->person_url = $personUrl;
+            $task->garment_url = $garmentUrl;
+            $task->aliyun_task_id = $aliyunTaskId;
+            $task->status = TryonTask::STATUS_PENDING;
+            if (!$task->save()) {
+                throw new BizException(ErrorCode::TRYON_FAILED);
+            }
+        } catch (\Throwable $e) {
+            // 已扣币但提交/落库失败 → 退款，避免白扣
+            if ($charged) {
+                $wallet->credit($userId, $price, WalletTransaction::TYPE_REFUND, [
+                    'refType' => 'tryon_refund',
+                    'remark' => 'AI 试衣提交失败退款',
+                ]);
+            }
+            throw $e;
         }
         return $task->toArray();
+    }
+
+    /**
+     * 试衣配额提示（App 进页面展示："今日剩余免费 X 次 / 超额 Y 币/次"）。
+     *
+     * @return array{isPremium:bool, freeQuota:int, freeRemaining:int, price:int}
+     */
+    public function quota(int $userId): array
+    {
+        ['freeQuota' => $freeQuota, 'price' => $price, 'isPremium' => $isPremium] = $this->pricing($userId);
+        $used = $this->todayCount($userId);
+        return [
+            'isPremium' => $isPremium,
+            'freeQuota' => $freeQuota,
+            'freeRemaining' => max(0, $freeQuota - $used),
+            'price' => $price,
+        ];
+    }
+
+    /**
+     * 按会员状态定价。isPremiumActive() 已含到期判断（过期会员回落普通档）。
+     *
+     * @return array{isPremium:bool, freeQuota:int, price:int}
+     */
+    private function pricing(int $userId): array
+    {
+        $user = User::findOne(['id' => $userId]);
+        $isPremium = $user !== null && $user->isPremiumActive();
+        return [
+            'isPremium' => $isPremium,
+            'freeQuota' => $isPremium ? self::FREE_QUOTA_PREMIUM : self::FREE_QUOTA_NORMAL,
+            'price' => $isPremium ? self::PRICE_PREMIUM : self::PRICE_NORMAL,
+        ];
+    }
+
+    /**
+     * 今日该用户提交的试衣任务数（含软删，用于免费额度判定）。
+     * ponytail: strtotime('today') 用服务器时区做日界；CN 单机部署时区为 Asia/Shanghai，与用户一致。
+     */
+    private function todayCount(int $userId): int
+    {
+        return (int) TryonTask::find()
+            ->where(['user_id' => $userId])
+            ->andWhere(['>=', 'created_at', strtotime('today')])
+            ->count();
     }
 
     /**

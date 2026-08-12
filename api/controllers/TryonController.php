@@ -46,6 +46,12 @@ class TryonController extends ApiController
         return (new TryonService())->pollTask($this->currentUser()->getId(), $id);
     }
 
+    /** GET /tryon/quota —— 今日试衣配额（剩余免费次数 / 超额单价，供页面提示） */
+    public function actionQuota(): array
+    {
+        return (new TryonService())->quota($this->currentUser()->getId());
+    }
+
     /** GET /tryon/tasks —— 我的试衣历史 */
     public function actionMyTasks(): array
     {
