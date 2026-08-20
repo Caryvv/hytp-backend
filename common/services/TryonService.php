@@ -48,46 +48,70 @@ class TryonService
         // 计费：有效会员每日免费 5 次、超额 8 币；普通用户 3 次、超额 10 币。
         ['freeQuota' => $freeQuota, 'price' => $price] = $this->pricing($userId);
 
-        // 今日已用次数含软删记录，否则删历史即可刷新免费额度白嫖
-        // ponytail: count→debit 非原子，并发提交可能多蹭 1~2 次免费；debit 本身原子（不会扣负），
-        //           App 单次提交场景价值低，不上行锁。要严格额度再对 user 加锁或唯一约束。
-        $needCharge = $this->todayCount($userId) >= $freeQuota;
+        // count→debit 非原子：并发提交会击穿免费额度。用 MySQL 命名锁按用户串行化整段，
+        // 同一用户第二个请求排队等前一个走完（含阿里云 submit），不同用户互不阻塞。
+        // ponytail: GET_LOCK 单机足够；真分布式多 MySQL 节点才需换 Redis 锁。
+        return $this->withUserLock($userId, function () use ($userId, $productId, $personUrl, $garmentUrl, $freeQuota, $price): array {
+            // 今日已用次数含软删记录，否则删历史即可刷新免费额度白嫖
+            $needCharge = $this->todayCount($userId) >= $freeQuota;
 
-        $wallet = new WalletService();
-        $charged = false;
-        if ($needCharge) {
-            // 先扣币：余额不足在调阿里云前就抛 BALANCE_NOT_ENOUGH，不浪费一次 API 调用
-            $wallet->debit($userId, $price, WalletTransaction::TYPE_CONSUME, [
-                'refType' => 'tryon',
-                'remark' => 'AI 试衣超额',
-            ]);
-            $charged = true;
-        }
-
-        try {
-            $aliyunTaskId = (new AiTryonService())->submit($personUrl, $garmentUrl);
-
-            $task = new TryonTask();
-            $task->user_id = $userId;
-            $task->product_id = $productId;
-            $task->person_url = $personUrl;
-            $task->garment_url = $garmentUrl;
-            $task->aliyun_task_id = $aliyunTaskId;
-            $task->status = TryonTask::STATUS_PENDING;
-            if (!$task->save()) {
-                throw new BizException(ErrorCode::TRYON_FAILED);
-            }
-        } catch (\Throwable $e) {
-            // 已扣币但提交/落库失败 → 退款，避免白扣
-            if ($charged) {
-                $wallet->credit($userId, $price, WalletTransaction::TYPE_REFUND, [
-                    'refType' => 'tryon_refund',
-                    'remark' => 'AI 试衣提交失败退款',
+            $wallet = new WalletService();
+            $charged = false;
+            if ($needCharge) {
+                // 先扣币：余额不足在调阿里云前就抛 BALANCE_NOT_ENOUGH，不浪费一次 API 调用
+                $wallet->debit($userId, $price, WalletTransaction::TYPE_CONSUME, [
+                    'refType' => 'tryon',
+                    'remark' => 'AI 试衣超额',
                 ]);
+                $charged = true;
             }
-            throw $e;
+
+            try {
+                $aliyunTaskId = (new AiTryonService())->submit($personUrl, $garmentUrl);
+
+                $task = new TryonTask();
+                $task->user_id = $userId;
+                $task->product_id = $productId;
+                $task->person_url = $personUrl;
+                $task->garment_url = $garmentUrl;
+                $task->aliyun_task_id = $aliyunTaskId;
+                $task->status = TryonTask::STATUS_PENDING;
+                if (!$task->save()) {
+                    throw new BizException(ErrorCode::TRYON_FAILED);
+                }
+            } catch (\Throwable $e) {
+                // 已扣币但提交/落库失败 → 退款，避免白扣
+                if ($charged) {
+                    $wallet->credit($userId, $price, WalletTransaction::TYPE_REFUND, [
+                        'refType' => 'tryon_refund',
+                        'remark' => 'AI 试衣提交失败退款',
+                    ]);
+                }
+                throw $e;
+            }
+            return $task->toArray();
+        });
+    }
+
+    /**
+     * 按用户加 MySQL 命名锁执行 $fn，串行化同一用户的并发提交（防击穿免费额度）。
+     * 锁走 tryon_task 所在连接（dbSocial，与计次/落库同库）。拿不到锁按繁忙拒绝，
+     * 不阻塞太久；whatever 结果都在 finally 释放锁。
+     */
+    private function withUserLock(int $userId, callable $fn): array
+    {
+        $db = TryonTask::getDb();
+        $lockName = "tryon:user:{$userId}";
+        // GET_LOCK 超时 10s：正常一次提交（含阿里云 submit）1~3s，10s 够排队且不会挂死请求。
+        $got = (int) $db->createCommand('SELECT GET_LOCK(:n, 10)', [':n' => $lockName])->queryScalar();
+        if ($got !== 1) {
+            throw new BizException(ErrorCode::TRYON_FAILED, '操作太频繁，请稍后再试');
         }
-        return $task->toArray();
+        try {
+            return $fn();
+        } finally {
+            $db->createCommand('SELECT RELEASE_LOCK(:n)', [':n' => $lockName])->queryScalar();
+        }
     }
 
     /**
