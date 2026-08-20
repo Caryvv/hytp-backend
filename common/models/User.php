@@ -182,6 +182,7 @@ class User extends ActiveRecord implements IdentityInterface
             'city' => $this->city,
             'memberLevel' => (int) $this->member_level,
             'memberExpireAt' => $this->member_expire_at !== null ? (int) $this->member_expire_at : null,
+            'isPremium' => $this->isPremiumActive(), // 权益判定看这个：member_level 到期后不归 0，单看它会误显会员
             'balance' => $this->balance ?? '0.00',
         ];
     }

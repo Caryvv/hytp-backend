@@ -14,6 +14,7 @@ use common\models\Product;
 use common\models\ProductSku;
 use common\models\Shop;
 use common\models\ShopOrder;
+use common\models\User;
 use Yii;
 
 /**
@@ -21,10 +22,12 @@ use Yii;
  *
  * 购物车按 shop_id 拆单；下单事务内扣库存；取消回补；确认收货结算佣金。
  * 佣金比例读 sys_config `trade.commission_rate`（默认 0.06）。
+ * 高级会员购买享 95 折：total_amount 存原价、pay_amount 存折后价，佣金按折后价算（折扣由商家承担）。
  */
 class OrderService
 {
     private const DEFAULT_COMMISSION_RATE = '0.06';
+    private const MEMBER_DISCOUNT = '0.95'; // 高级会员 95 折
 
     /**
      * 结算预览：按店铺分组算金额（不落库）。
@@ -39,6 +42,7 @@ class OrderService
             throw new BizException(ErrorCode::CART_EMPTY);
         }
 
+        $discount = $this->discountRate($userId);
         $groups = $this->groupByShop($lines);
         $shops = [];
         $grandTotal = '0.00';
@@ -69,7 +73,14 @@ class OrderService
             ];
         }
 
-        return ['shops' => $shops, 'totalAmount' => $grandTotal];
+        // 会员 95 折：原价 totalAmount + 折后实付 payAmount（普通用户两者相等）
+        $payAmount = $this->applyDiscount($grandTotal, $discount);
+        return [
+            'shops' => $shops,
+            'totalAmount' => $grandTotal,
+            'payAmount' => $payAmount,
+            'memberDiscount' => $discount !== '1.00',
+        ];
     }
 
     /**
@@ -107,6 +118,7 @@ class OrderService
         $groups = $this->groupByShop($lines);
         $remark = (string) ($in['remark'] ?? '');
         $rate = $this->commissionRate();
+        $discount = $this->discountRate($userId);
 
         $tx = ShopOrder::getDb()->beginTransaction();
         try {
@@ -129,10 +141,12 @@ class OrderService
                 $order->order_no = $this->genOrderNo();
                 $order->user_id = $userId;
                 $order->shop_id = (int) $shopId;
+                // 会员 95 折：原价留 total_amount，实付/佣金按折后价（折扣由商家承担）
+                $payable = $this->applyDiscount($subtotal, $discount);
                 $order->type = ShopOrder::TYPE_BUY;
                 $order->total_amount = $subtotal;
-                $order->pay_amount = $subtotal;
-                $order->commission = bcmul($subtotal, $rate, 2);
+                $order->pay_amount = $payable;
+                $order->commission = bcmul($payable, $rate, 2);
                 $order->status = ShopOrder::STATUS_UNPAID;
                 $order->address_id = $address->getId();
                 $order->address_snapshot = $address->toArray();
@@ -608,6 +622,19 @@ class OrderService
     {
         $rate = \common\models\SysConfig::get('trade.commission_rate', self::DEFAULT_COMMISSION_RATE);
         return $rate !== null && is_numeric($rate) ? $rate : self::DEFAULT_COMMISSION_RATE;
+    }
+
+    /** 会员折扣倍率：有效高级会员 0.95，否则 1.00（普通/过期）。 */
+    private function discountRate(int $userId): string
+    {
+        $user = User::findOne(['id' => $userId]);
+        return $user !== null && $user->isPremiumActive() ? self::MEMBER_DISCOUNT : '1.00';
+    }
+
+    /** 原价 → 会员折后价（2 位小数）。倍率 1.00 时原样返回。 */
+    private function applyDiscount(string $amount, string $rate): string
+    {
+        return $rate === '1.00' ? $amount : bcmul($amount, $rate, 2);
     }
 
     private function genOrderNo(): string
