@@ -51,6 +51,16 @@ class WalletController extends ApiController
         return (new WalletService())->withdraw($this->currentUser()->getId(), $coin);
     }
 
+    /** GET /wallet/transactions —— 钱包流水（充值/消费/退款/提现等，倒序分页） */
+    public function actionTransactions(): array
+    {
+        $req = Yii::$app->request;
+        return (new WalletService())->transactions($this->currentUser()->getId(), [
+            'page' => $req->get('page'),
+            'pageSize' => $req->get('pageSize'),
+        ]);
+    }
+
     private function currentUser(): User
     {
         /** @var User|null $user */

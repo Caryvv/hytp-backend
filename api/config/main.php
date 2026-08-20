@@ -93,6 +93,7 @@ return [
                 'POST wallet/recharge' => 'wallet/recharge',
                 'POST wallet/recharge/mock/confirm' => 'wallet/mock-confirm',
                 'POST wallet/withdraw' => 'wallet/withdraw',
+                'GET wallet/transactions' => 'wallet/transactions',
                 // 会员开通/续费（同袍币购买）
                 'GET membership/plan' => 'membership/plan',
                 'POST membership/purchase' => 'membership/purchase',

@@ -166,6 +166,30 @@ class WalletService
     }
 
     /**
+     * 钱包流水列表（倒序分页）。App 钱包明细页展示充值/消费/退款/提现等记录。
+     *
+     * @param array<string,mixed> $in page, pageSize
+     * @return array{list:array<int,array>, pagination:array{page:int,pageSize:int,total:int}}
+     */
+    public function transactions(int $userId, array $in): array
+    {
+        $page = max(1, (int) ($in['page'] ?? 1));
+        $pageSize = min(50, max(1, (int) ($in['pageSize'] ?? 20)));
+
+        $query = WalletTransaction::find()->where(['user_id' => $userId]);
+        $total = (int) $query->count();
+        $rows = $query->orderBy(['id' => SORT_DESC])
+            ->offset(($page - 1) * $pageSize)
+            ->limit($pageSize)
+            ->all();
+
+        return [
+            'list' => array_map(static fn (WalletTransaction $t): array => $t->toArray(), $rows),
+            'pagination' => ['page' => $page, 'pageSize' => $pageSize, 'total' => $total],
+        ];
+    }
+
+    /**
      * 充值确认（Mock 幂等查询 / 真实通道回调到账入口）。
      *
      * @return array{rechargeNo:string, coin:int, balanceCoin:int, done:bool}
