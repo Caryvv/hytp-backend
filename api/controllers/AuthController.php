@@ -28,6 +28,7 @@ class AuthController extends ApiController
             'code' => $req->post('code'),
             'password' => $req->post('password'),
             'loginType' => $req->post('loginType', AuthService::LOGIN_TYPE_CODE),
+            'ip' => $req->userIP,
         ]);
     }
 

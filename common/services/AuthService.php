@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace common\services;
 
+use common\components\Redis;
 use common\enums\ErrorCode;
 use common\exceptions\BizException;
 use common\models\User;
@@ -33,7 +34,7 @@ class AuthService
     /**
      * 登录/注册。
      *
-     * @param array{phone:?string, code:?string, password:?string, loginType:?string} $in
+     * @param array{phone:?string, code:?string, password:?string, loginType:?string, ip:?string} $in
      * @return array 登录响应结构（含 token 与 user）
      */
     public function login(array $in): array
@@ -44,6 +45,9 @@ class AuthService
         if (!preg_match('/^1[3-9]\d{9}$/', $phone)) {
             throw new BizException(ErrorCode::PARAM_INVALID, '手机号格式不正确');
         }
+
+        // 登录限速：按 手机号+IP 固定窗口，防验证码/密码爆破（配合 SmsService::verify 的错误锁定双保险）
+        $this->checkLoginRate($phone, (string) ($in['ip'] ?? ''));
 
         $isNewUser = false;
 
@@ -103,6 +107,29 @@ class AuthService
     {
         if (trim($refreshToken) !== '') {
             $this->jwt->revoke($refreshToken);
+        }
+    }
+
+    /**
+     * 登录限速：手机号+IP 固定窗口内限尝试次数，防爆破。
+     * ponytail: 固定窗口够用；要严格限速再上滑窗/令牌桶。
+     */
+    private function checkLoginRate(string $phone, string $ip): void
+    {
+        $window = (int) (Yii::$app->params['login.attemptWindow'] ?? 60);
+        $max = (int) (Yii::$app->params['login.maxAttempts'] ?? 10);
+        if ($max <= 0) {
+            return;
+        }
+        $redis = Redis::conn();
+        // ip 可能为空（CLI/测试），退化为仅按手机号限
+        $key = 'hytp:login:rate:' . $phone . ':' . ($ip !== '' ? $ip : 'noip');
+        $count = (int) $redis->incr($key);
+        if ($count === 1) {
+            $redis->expire($key, $window);
+        }
+        if ($count > $max) {
+            throw new BizException(ErrorCode::TOO_MANY_REQUESTS, '尝试过于频繁，请稍后再试');
         }
     }
 

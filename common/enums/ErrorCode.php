@@ -27,6 +27,9 @@ class ErrorCode
     public const SMS_CODE_INVALID = 1102;
     public const ACCOUNT_DISABLED = 1103;
     public const OAUTH_FAIL = 1104;
+    public const CAPTCHA_REQUIRED = 1105;  // 需先通过人机验证
+    public const CAPTCHA_INVALID = 1106;   // 人机验证失败
+    public const CODE_LOCKED = 1107;       // 验证码错误次数过多，已锁定
 
     // 商品/交易 1200-1299
     public const STOCK_NOT_ENOUGH = 1201;
@@ -118,6 +121,9 @@ class ErrorCode
         self::SMS_CODE_INVALID => '验证码错误或已过期',
         self::ACCOUNT_DISABLED => '账号已被禁用',
         self::OAUTH_FAIL => '第三方登录失败',
+        self::CAPTCHA_REQUIRED => '请先完成安全验证',
+        self::CAPTCHA_INVALID => '安全验证失败，请重试',
+        self::CODE_LOCKED => '验证码错误次数过多，请稍后重新获取',
         self::STOCK_NOT_ENOUGH => '库存不足',
         self::PRODUCT_OFF_SHELF => '商品已下架',
         self::ORDER_STATUS_INVALID => '订单状态不允许该操作',

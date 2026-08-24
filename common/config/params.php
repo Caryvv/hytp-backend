@@ -23,6 +23,17 @@ return [
     'sms.codeTtl' => 300,                  // 验证码有效期（秒）
     'sms.resendInterval' => 60,            // 同号重发间隔（秒）
     'sms.ipDailyLimit' => 50,              // 同 IP 每日发送上限
+    'sms.globalDailyLimit' => 5000,        // 全局每日发送熔断（保护短信账单，防绕过号/IP 限流后烧余额）
+    'sms.maxVerifyFail' => 5,              // 单号验证码连续错误上限，超则锁定并作废当前码
+    'sms.verifyLockTtl' => 600,            // 验证码错误锁定时长（秒）
+
+    // 登录接口防爆破：按 手机号+IP 滑动窗口限速
+    'login.attemptWindow' => 60,           // 限速窗口（秒）
+    'login.maxAttempts' => 10,             // 窗口内最大登录尝试次数
+
+    // 人机验证（滑块/行为验证码），发短信前置。captcha.mock=true 时任意非空 token 通过（联调用）
+    'captcha.enabled' => true,
+    'captcha.mock' => true,
 
     // AI 微服务（情感分析等，内网 HTTP + HMAC；密钥在 params-local 覆盖）
     'ai.enabled' => true,                              // false 时直接走规则版，不发 HTTP
