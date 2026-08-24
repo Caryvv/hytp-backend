@@ -44,8 +44,11 @@ class FeedService
         $feed->tags = isset($in['tags']) && is_array($in['tags']) ? $in['tags'] : [];
         $feed->product_ids = isset($in['productIds']) && is_array($in['productIds']) ? $in['productIds'] : [];
         $feed->city = (string) ($in['city'] ?? '');
-        // 敏感词命中 → 转待审进人工队列；否则先发后审直接正常
-        $feed->status = (new SensitiveWordService())->hasHit($content)
+        // 文字敏感词命中 或 图片机审不过 → 转待审进人工队列；否则先发后审直接正常。
+        // 图片审核走 AI 网关（阿里云内容安全），服务异常时放行不阻塞发布（见 ContentAuditService）。
+        $textHit = (new SensitiveWordService())->hasHit($content);
+        $imageBad = !$textHit && !(new ContentAuditService())->imagesPass($feed->media);
+        $feed->status = ($textHit || $imageBad)
             ? Feed::STATUS_AUDITING
             : Feed::STATUS_NORMAL;
 
