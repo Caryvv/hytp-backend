@@ -74,6 +74,8 @@ return [
                 'GET feeds' => 'feed/index',
                 'POST feeds/<id:\d+>/audit' => 'feed/audit',
                 'POST feeds/<id:\d+>/review' => 'feed/review',
+                'GET feed-reports' => 'feed/reports',
+                'POST feed-reports/<id:\d+>/handle' => 'feed/handle-report',
                 // 商家处罚（扣分/封禁/解封 + 信用流水）
                 'GET shops/<id:\d+>/credit-logs' => 'penalty/credit-logs',
                 'POST shops/<id:\d+>/penalty' => 'penalty/penalty',

@@ -75,6 +75,8 @@ class ErrorCode
     public const TIP_SELF = 1411;               // 不能打赏自己的动态
     public const TIP_AMOUNT_INVALID = 1412;     // 打赏金额非法
     public const CONTENT_SENSITIVE = 1413;      // 内容含敏感词
+    public const REPORT_ALREADY = 1414;         // 已举报过该动态
+    public const REPORT_NOT_FOUND = 1415;       // 举报记录不存在
 
     // 文件上传 1306-1309
     public const UPLOAD_FAILED = 1306;

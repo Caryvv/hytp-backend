@@ -66,4 +66,35 @@ class FeedController extends AdminBaseController
         );
         return $result;
     }
+
+    /** GET /admin/feed-reports —— 用户举报队列 ?status=0&page=&pageSize=（默认待处理） */
+    public function actionReports(): array
+    {
+        $this->requirePermission(AdminRolePermission::PERM_FEED_AUDIT);
+        $req = Yii::$app->request;
+        return (new AuditService())->reportList([
+            'status' => $req->get('status'),
+            'page' => $req->get('page'),
+            'pageSize' => $req->get('pageSize'),
+        ]);
+    }
+
+    /** POST /admin/feed-reports/{id}/handle —— 处置举报 { accept:bool, remark? }（accept=true 成立并下架动态） */
+    public function actionHandleReport(int $id): array
+    {
+        $admin = $this->requirePermission(AdminRolePermission::PERM_FEED_AUDIT);
+        $req = Yii::$app->request;
+        $accept = (bool) $req->post('accept', false);
+        $remark = (string) $req->post('remark', '');
+
+        $result = (new AuditService())->handleReport($id, $admin->getId(), $accept, $remark);
+
+        (new AdminLogService())->record(
+            $admin->getId(),
+            $accept ? 'feed.report.accept' : 'feed.report.ignore',
+            'feed_report',
+            ['reportId' => $id, 'remark' => $remark],
+        );
+        return $result;
+    }
 }

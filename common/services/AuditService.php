@@ -7,6 +7,7 @@ namespace common\services;
 use common\enums\ErrorCode;
 use common\exceptions\BizException;
 use common\models\Feed;
+use common\models\FeedReport;
 use common\models\Product;
 use common\models\Shop;
 use common\models\User;
@@ -273,5 +274,101 @@ class AuditService
             throw new BizException(ErrorCode::INTERNAL_ERROR, '审核保存失败');
         }
         return $feed->toAdminArray();
+    }
+
+    // ---------------- 用户举报 ----------------
+
+    /**
+     * 举报队列（管理端，默认查待处理）。附举报人昵称 + 被举报动态摘要，防 N+1。
+     *
+     * @param array<string,mixed> $in status?, page, pageSize
+     * @return array{list:array<int,array>, pagination:array{page:int,pageSize:int,total:int}}
+     */
+    public function reportList(array $in): array
+    {
+        $page = max(1, (int) ($in['page'] ?? 1));
+        $pageSize = min(50, max(1, (int) ($in['pageSize'] ?? 20)));
+
+        $query = FeedReport::find();
+        $status = $in['status'] ?? FeedReport::STATUS_PENDING;
+        if ($status !== '') {
+            $query->andWhere(['status' => (int) $status]);
+        }
+
+        $total = (int) $query->count();
+        /** @var FeedReport[] $rows */
+        $rows = $query->orderBy(['id' => SORT_DESC])
+            ->offset(($page - 1) * $pageSize)
+            ->limit($pageSize)
+            ->all();
+
+        // 批量拼举报人昵称 + 被举报动态摘要，防 N+1
+        $reporterIds = array_values(array_unique(array_map(static fn (FeedReport $r): int => (int) $r->user_id, $rows)));
+        $feedIds = array_values(array_unique(array_map(static fn (FeedReport $r): int => (int) $r->feed_id, $rows)));
+        $reporters = [];
+        foreach (($reporterIds === [] ? [] : User::find()->where(['id' => $reporterIds])->all()) as $u) {
+            /** @var User $u */
+            $reporters[$u->getId()] = $u->toPublicArray();
+        }
+        $feeds = [];
+        foreach (($feedIds === [] ? [] : Feed::find()->where(['id' => $feedIds])->all()) as $f) {
+            /** @var Feed $f */
+            $feeds[$f->getId()] = ['id' => $f->getId(), 'content' => $f->content, 'status' => (int) $f->status];
+        }
+
+        $list = array_map(static function (FeedReport $r) use ($reporters, $feeds): array {
+            $view = $r->toArray();
+            $view['reporter'] = $reporters[(int) $r->user_id] ?? null;
+            $view['feed'] = $feeds[(int) $r->feed_id] ?? null;
+            return $view;
+        }, $rows);
+
+        return [
+            'list' => $list,
+            'pagination' => ['page' => $page, 'pageSize' => $pageSize, 'total' => $total],
+        ];
+    }
+
+    /**
+     * 处置举报：成立则下架被举报动态并标记，忽略则仅置状态。
+     * 同一动态的其他待处理举报一并置为成立（避免重复处理同一条动态的多份举报）。
+     *
+     * @param bool $accept true 成立（下架动态），false 忽略
+     */
+    public function handleReport(int $reportId, int $adminId, bool $accept, string $remark = ''): array
+    {
+        $report = FeedReport::findOne(['id' => $reportId]);
+        if ($report === null) {
+            throw new BizException(ErrorCode::REPORT_NOT_FOUND);
+        }
+        if ((int) $report->status !== FeedReport::STATUS_PENDING) {
+            throw new BizException(ErrorCode::FEED_STATUS_INVALID, '该举报已处理');
+        }
+
+        if ($accept) {
+            if (trim($remark) === '') {
+                throw new BizException(ErrorCode::PARAM_INVALID, '举报成立需填写下架理由');
+            }
+            // 下架被举报动态（若还未下架）
+            $feed = Feed::findOne(['id' => $report->feed_id]);
+            if ($feed !== null && (int) $feed->status !== Feed::STATUS_OFF) {
+                $feed->status = Feed::STATUS_OFF;
+                $feed->off_reason = $remark;
+                $feed->save(false);
+            }
+            // 同动态其他待处理举报一并置成立
+            FeedReport::updateAll(
+                ['status' => FeedReport::STATUS_ACCEPTED, 'handle_remark' => $remark, 'handled_by' => $adminId, 'updated_at' => time()],
+                ['feed_id' => $report->feed_id, 'status' => FeedReport::STATUS_PENDING],
+            );
+        } else {
+            $report->status = FeedReport::STATUS_IGNORED;
+            $report->handle_remark = $remark;
+            $report->handled_by = $adminId;
+            $report->save(false);
+        }
+
+        $report->refresh();
+        return $report->toArray();
     }
 }

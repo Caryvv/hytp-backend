@@ -141,6 +141,7 @@ return [
                 'POST feeds/<id:\d+>/tip' => 'feed/tip',
                 'GET feeds/<id:\d+>/comments' => 'feed/comments',
                 'POST feeds/<id:\d+>/comments' => 'feed/comment',
+                'POST feeds/<id:\d+>/report' => 'feed/report',
                 'POST users/<id:\d+>/follow' => 'user/follow',
                 'POST users/<id:\d+>/unfollow' => 'user/unfollow',
                 'GET users/<id:\d+>/profile' => 'user/public-profile',

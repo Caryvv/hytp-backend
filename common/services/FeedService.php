@@ -10,6 +10,7 @@ use common\models\Feed;
 use common\models\FeedComment;
 use common\models\FeedFavorite;
 use common\models\FeedLike;
+use common\models\FeedReport;
 use common\models\Follow;
 use common\models\User;
 use Yii;
@@ -129,6 +130,37 @@ class FeedService
             throw new BizException(ErrorCode::FEED_STATUS_INVALID, '动态不可见');
         }
         return $this->decorate($userId, [$feed])[0];
+    }
+
+    /**
+     * 举报动态。同一用户对同一动态只能举报一次（唯一键 feed_id+user_id）。
+     * 提交后进管理端待处理队列，复用 feed:audit 权限处置。
+     *
+     * @param array<string,mixed> $in reason(必填 1~5), detail?
+     */
+    public function report(int $userId, int $feedId, array $in): array
+    {
+        $feed = Feed::findOne(['id' => $feedId]);
+        if ($feed === null) {
+            throw new BizException(ErrorCode::FEED_NOT_FOUND);
+        }
+        if ((int) $feed->user_id === $userId) {
+            throw new BizException(ErrorCode::FORBIDDEN, '不能举报自己的动态');
+        }
+
+        $report = new FeedReport();
+        $report->feed_id = $feedId;
+        $report->user_id = $userId;
+        $report->reason = (int) ($in['reason'] ?? 0);
+        $report->detail = trim((string) ($in['detail'] ?? ''));
+        if (!$report->validate()) {
+            throw new BizException(ErrorCode::PARAM_INVALID, $this->firstError($report) ?? '举报参数有误');
+        }
+        if (!$report->save(false)) {
+            // 唯一键冲突 = 已举报过（save(false) 跳过校验，靠 DB 唯一键兜底）
+            throw new BizException(ErrorCode::REPORT_ALREADY, '你已举报过该动态');
+        }
+        return $report->toArray();
     }
 
     /**

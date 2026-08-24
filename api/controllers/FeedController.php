@@ -128,6 +128,16 @@ class FeedController extends ApiController
         ]);
     }
 
+    /** POST /feeds/{id}/report —— 举报动态 { reason(1~5), detail? } */
+    public function actionReport(int $id): array
+    {
+        $req = Yii::$app->request;
+        return (new FeedService())->report($this->currentUser()->getId(), $id, [
+            'reason' => $req->post('reason'),
+            'detail' => $req->post('detail'),
+        ]);
+    }
+
     private function currentUser(): User
     {
         /** @var User|null $user */
