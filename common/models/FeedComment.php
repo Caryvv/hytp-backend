@@ -16,10 +16,14 @@ use common\base\SocialActiveRecord;
  * @property int $user_id
  * @property int|null $parent_id 盖楼父评论
  * @property string $content
+ * @property int $status 1正常 0隐藏(命中敏感词软隐藏，仅作者可见)
  * @property int $created_at
  */
 class FeedComment extends SocialActiveRecord
 {
+    public const STATUS_NORMAL = 1; // 正常，对所有人可见
+    public const STATUS_HIDDEN = 0; // 隐藏（命中敏感词），仅作者本人可见、不计入评论数
+
     public static function tableName(): string
     {
         return '{{%feed_comment}}';
@@ -57,6 +61,7 @@ class FeedComment extends SocialActiveRecord
             'userId' => (int) $this->user_id,
             'parentId' => $this->parent_id !== null ? (int) $this->parent_id : null,
             'content' => $this->content,
+            'status' => (int) $this->status,
             'createdAt' => (int) $this->created_at,
         ];
     }

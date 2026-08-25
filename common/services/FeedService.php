@@ -288,7 +288,10 @@ class FeedService
         $page = max(1, (int) ($in['page'] ?? 1));
         $pageSize = min(50, max(1, (int) ($in['pageSize'] ?? 20)));
 
-        $query = FeedComment::find()->where(['feed_id' => $feedId]);
+        // 正常评论对所有人可见；被软隐藏的评论仅作者本人可见（不困惑发出者，也不给"命中"反馈）
+        $query = FeedComment::find()
+            ->where(['feed_id' => $feedId])
+            ->andWhere(['or', ['status' => FeedComment::STATUS_NORMAL], ['user_id' => $userId]]);
         $total = (int) $query->count();
         $rows = $query->orderBy(['id' => SORT_DESC])
             ->offset(($page - 1) * $pageSize)
@@ -322,10 +325,9 @@ class FeedService
         if ($content === '') {
             throw new BizException(ErrorCode::PARAM_INVALID, '评论内容不能为空');
         }
-        // 评论无审核状态字段且高频，命中敏感词直接拒绝（不进队列）
-        if ((new SensitiveWordService())->hasHit($content)) {
-            throw new BizException(ErrorCode::CONTENT_SENSITIVE);
-        }
+        // 命中敏感词 → 软隐藏：照常落库但 status=0，仅作者本人可见、不计入评论数、不给"命中"反馈。
+        // 命中即永久隐藏（不进人工队列）：评论量大，人工审核会积压；软隐藏既挡传播又不困惑作者。
+        $hidden = (new SensitiveWordService())->hasHit($content);
         $parentId = isset($in['parentId']) && $in['parentId'] !== '' ? (int) $in['parentId'] : null;
         if ($parentId !== null) {
             $parent = FeedComment::findOne(['id' => $parentId, 'feed_id' => $feedId]);
@@ -339,13 +341,17 @@ class FeedService
         $comment->user_id = $userId;
         $comment->parent_id = $parentId;
         $comment->content = $content;
+        $comment->status = $hidden ? FeedComment::STATUS_HIDDEN : FeedComment::STATUS_NORMAL;
 
         $tx = Feed::getDb()->beginTransaction();
         try {
             if (!$comment->save()) {
                 throw new BizException(ErrorCode::PARAM_INVALID, $this->firstError($comment) ?? '评论失败');
             }
-            Feed::updateAllCounters(['comment_count' => 1], ['id' => $feedId]);
+            // 隐藏评论不计入公开评论数（否则计数与可见评论对不上）
+            if (!$hidden) {
+                Feed::updateAllCounters(['comment_count' => 1], ['id' => $feedId]);
+            }
             $tx->commit();
         } catch (\Throwable $e) {
             $tx->rollBack();
